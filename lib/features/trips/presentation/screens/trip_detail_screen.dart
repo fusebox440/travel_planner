@@ -34,21 +34,43 @@ class TripDetailScreen extends ConsumerWidget {
               SliverList(
                 delegate: SliverChildListDelegate([
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.checkroom_outlined),
-                        title: const Text('Packing List'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          context.go('/trip/$tripId/packing-list');
-                        },
-                      ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Column(
+                      children: [
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.checkroom_outlined),
+                            title: const Text('View Packing List'),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go('/trip/${trip.id}/packing-list',
+                                  extra: trip);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(
+                                Icons.account_balance_wallet_outlined),
+                            title: const Text('Budget Tracking'),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go('/trip/${trip.id}/budget');
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   _AddDayButton(tripId: trip.id),
-                  ...trip.days.map((day) => _DayCard(tripId: trip.id, day: day)),
+                  ...trip.days
+                      .map((day) => _DayCard(tripId: trip.id, day: day)),
                   const SizedBox(height: 80),
                 ]),
               ),
@@ -60,7 +82,8 @@ class TripDetailScreen extends ConsumerWidget {
             SliverAppBar(
               expandedHeight: 250.0,
               pinned: true,
-              flexibleSpace: FlexibleSpaceBar(background: MapPlaceholderSkeleton()),
+              flexibleSpace:
+                  FlexibleSpaceBar(background: MapPlaceholderSkeleton()),
             ),
             SliverList(
               delegate: SliverChildListDelegate.fixed([
@@ -89,7 +112,8 @@ class _ParallaxHeader extends StatelessWidget {
       pinned: true,
       stretch: true,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(trip.title, style: const TextStyle(shadows: [Shadow(blurRadius: 8)])),
+        title: Text(trip.title,
+            style: const TextStyle(shadows: [Shadow(blurRadius: 8)])),
         centerTitle: true,
         background: Stack(
           fit: StackFit.expand,
@@ -115,7 +139,8 @@ class _ParallaxHeader extends StatelessWidget {
                   const _MapPreview(),
                   Text(
                     '${DateFormat.yMMMd().format(trip.startDate)} - ${DateFormat.yMMMd().format(trip.endDate)}',
-                    style: const TextStyle(color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
+                    style: const TextStyle(
+                        color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
                   ),
                 ],
               ),
@@ -141,7 +166,8 @@ class _ParallaxHeader extends StatelessWidget {
         child: CachedNetworkImage(
           imageUrl: trip.imageUrl!,
           fit: BoxFit.cover,
-          placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.primaryContainer),
+          placeholder: (context, url) =>
+              Container(color: Theme.of(context).colorScheme.primaryContainer),
           errorWidget: (context, url, error) => _buildGradientFallback(context),
         ),
       );
@@ -173,22 +199,27 @@ class _MapPreview extends StatefulWidget {
   State<_MapPreview> createState() => _MapPreviewState();
 }
 
-class _MapPreviewState extends State<_MapPreview> with SingleTickerProviderStateMixin {
+class _MapPreviewState extends State<_MapPreview>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
   }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
   void _onTap() {
     HapticFeedback.lightImpact();
     _controller.forward(from: 0.0);
   }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -204,13 +235,18 @@ class _MapPreviewState extends State<_MapPreview> with SingleTickerProviderState
             children: [
               const Icon(Icons.map, size: 30, color: Colors.grey),
               ScaleTransition(
-                scale: Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut)),
+                scale: Tween<double>(begin: 0.0, end: 1.0).animate(
+                    CurvedAnimation(
+                        parent: _controller, curve: Curves.easeOut)),
                 child: FadeTransition(
-                  opacity: Tween<double>(begin: 1.0, end: 0.0).animate(_controller),
+                  opacity:
+                      Tween<double>(begin: 1.0, end: 0.0).animate(_controller),
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2),
                     ),
                   ),
                 ),
@@ -233,13 +269,20 @@ class _AddDayButton extends ConsumerWidget {
       child: ElevatedButton.icon(
         icon: const Icon(Icons.add),
         label: const Text('Add Day'),
-        style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+        style: ElevatedButton.styleFrom(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
         onPressed: () {
           HapticFeedback.lightImpact();
           final trip = ref.read(tripDetailProvider(tripId)).value;
           if (trip != null) {
-            final newDate = trip.days.isNotEmpty ? trip.days.last.date.add(const Duration(days: 1)) : trip.startDate;
-            final newDay = Day(id: const Uuid().v4(), date: newDate, activities: HiveList(Hive.box<Activity>('activities')));
+            final newDate = trip.days.isNotEmpty
+                ? trip.days.last.date.add(const Duration(days: 1))
+                : trip.startDate;
+            final newDay = Day(
+                id: const Uuid().v4(),
+                date: newDate,
+                activities: HiveList(Hive.box<Activity>('activities')));
             ref.read(tripListProvider.notifier).addDayToTrip(tripId, newDay);
           }
         },
@@ -263,9 +306,11 @@ class _DayCardState extends State<_DayCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => AddActivitySheet(tripId: widget.tripId, dayId: widget.day.id),
+      builder: (_) =>
+          AddActivitySheet(tripId: widget.tripId, dayId: widget.day.id),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -274,7 +319,8 @@ class _DayCardState extends State<_DayCard> {
       child: Column(
         children: [
           ListTile(
-            title: Text(DateFormat.yMMMEd().format(widget.day.date), style: const TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(DateFormat.yMMMEd().format(widget.day.date),
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
             onTap: () {
               HapticFeedback.lightImpact();
@@ -298,10 +344,10 @@ class _DayCardState extends State<_DayCard> {
                     )
                   else
                     ...widget.day.activities.map((activity) => _ActivityCard(
-                      tripId: widget.tripId,
-                      dayId: widget.day.id,
-                      activity: activity,
-                    )),
+                          tripId: widget.tripId,
+                          dayId: widget.day.id,
+                          activity: activity,
+                        )),
                   if (widget.day.activities.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -326,30 +372,37 @@ class _ActivityCard extends ConsumerWidget {
   final String tripId;
   final String dayId;
   final Activity activity;
-  const _ActivityCard({required this.tripId, required this.dayId, required this.activity});
+  const _ActivityCard(
+      {required this.tripId, required this.dayId, required this.activity});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       leading: SizedBox(
         width: 100,
         child: activity.imagePaths.isEmpty
-            ? const Icon(Icons.photo_size_select_actual_outlined, color: Colors.grey)
+            ? const Icon(Icons.photo_size_select_actual_outlined,
+                color: Colors.grey)
             : ListView(
-          scrollDirection: Axis.horizontal,
-          children: activity.imagePaths.map((path) => Padding(
-            padding: const EdgeInsets.only(right: 4.0),
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullScreenImageViewer(imagePath: path)));
-              },
-              child: Hero(
-                tag: path,
-                child: Image.file(File(path), width: 50, height: 50, fit: BoxFit.cover),
+                scrollDirection: Axis.horizontal,
+                children: activity.imagePaths
+                    .map((path) => Padding(
+                          padding: const EdgeInsets.only(right: 4.0),
+                          child: InkWell(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (_) =>
+                                      FullScreenImageViewer(imagePath: path)));
+                            },
+                            child: Hero(
+                              tag: path,
+                              child: Image.file(File(path),
+                                  width: 50, height: 50, fit: BoxFit.cover),
+                            ),
+                          ),
+                        ))
+                    .toList(),
               ),
-            ),
-          )).toList(),
-        ),
       ),
       title: Text(activity.title),
       subtitle: Text(DateFormat.jm().format(activity.startTime)),
@@ -362,7 +415,9 @@ class _ActivityCard extends ConsumerWidget {
               value: activity.reminderId != null,
               onChanged: (val) {
                 HapticFeedback.lightImpact();
-                ref.read(tripListProvider.notifier).toggleActivityReminder(tripId, dayId, activity.id, val);
+                ref
+                    .read(tripListProvider.notifier)
+                    .toggleActivityReminder(tripId, dayId, activity.id, val);
               },
             ),
           ),
@@ -371,7 +426,9 @@ class _ActivityCard extends ConsumerWidget {
             tooltip: 'Delete Activity',
             onPressed: () {
               HapticFeedback.mediumImpact();
-              ref.read(tripListProvider.notifier).deleteActivity(tripId, dayId, activity.id);
+              ref
+                  .read(tripListProvider.notifier)
+                  .deleteActivity(tripId, dayId, activity.id);
             },
           ),
         ],

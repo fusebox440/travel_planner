@@ -39,6 +39,35 @@ final filteredTripsProvider = Provider<List<Trip>>((ref) {
 class TripListScreen extends ConsumerWidget {
   const TripListScreen({super.key});
 
+  /// Shows a confirmation dialog before deleting a trip.
+  void _confirmDelete(BuildContext context, WidgetRef ref, Trip trip) async {
+    HapticFeedback.mediumImpact();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Trip?'),
+        content: Text('Are you sure you want to delete "${trip.title}"? This will also delete all associated days, activities, and photos. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(tripListProvider.notifier).deleteTrip(trip.id);
+    }
+  }
+
   void _showCelebration(BuildContext context) {
     final batterySaverEnabled = SettingsService().getBatterySaver();
     if (batterySaverEnabled) return;
@@ -102,7 +131,7 @@ class TripListScreen extends ConsumerWidget {
               data: (trips) {
                 if (trips.isEmpty) return _buildEmptyState(context);
                 if (filteredTrips.isEmpty) return const Center(child: Text('No trips match your search.'));
-                return _buildTripList(context, filteredTrips);
+                return _buildTripList(context, ref, filteredTrips);
               },
               loading: () => ListView.builder(
                 itemCount: 3,
@@ -135,7 +164,7 @@ class TripListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTripList(BuildContext context, List<Trip> trips) {
+  Widget _buildTripList(BuildContext context, WidgetRef ref, List<Trip> trips) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 600;
@@ -147,6 +176,7 @@ class TripListScreen extends ConsumerWidget {
             return TripCard(
               trip: trip,
               onTap: () => context.go('/trip/${trip.id}'),
+              onDelete: () => _confirmDelete(context, ref, trip),
             );
           },
         );

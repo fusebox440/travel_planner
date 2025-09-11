@@ -8,7 +8,7 @@ part of 'packing_item.dart';
 
 class PackingItemAdapter extends TypeAdapter<PackingItem> {
   @override
-  final int typeId = 4;
+  final int typeId = 3;
 
   @override
   PackingItem read(BinaryReader reader) {
@@ -18,21 +18,36 @@ class PackingItemAdapter extends TypeAdapter<PackingItem> {
     };
     return PackingItem(
       id: fields[0] as String,
-      name: fields[1] as String,
-      isChecked: fields[2] as bool,
+      title: fields[1] as String,
+      category: fields[2] as String,
+      quantity: fields[3] as int,
+      isPacked: fields[4] as bool,
+      notes: fields[5] as String?,
+      createdAt: fields[6] as DateTime,
+      updatedAt: fields[7] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, PackingItem obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name)
+      ..write(obj.title)
       ..writeByte(2)
-      ..write(obj.isChecked);
+      ..write(obj.category)
+      ..writeByte(3)
+      ..write(obj.quantity)
+      ..writeByte(4)
+      ..write(obj.isPacked)
+      ..writeByte(5)
+      ..write(obj.notes)
+      ..writeByte(6)
+      ..write(obj.createdAt)
+      ..writeByte(7)
+      ..write(obj.updatedAt);
   }
 
   @override

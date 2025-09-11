@@ -1,132 +1,139 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
-import 'package:travel_planner/features/trips/presentation/providers/trip_providers.dart';
-import 'package:travel_planner/src/models/packing_item.dart';
-import 'package:travel_planner/widgets/ui_components.dart';
+import 'package:travel_planner/features/packing_list/presentation/providers/packing_list_provider.dart';
+import 'package:travel_planner/src/models/item_category.dart';
+import 'package:travel_planner/src/models/trip.dart';
 
-class PackingListScreen extends ConsumerStatefulWidget {
-  final String tripId;
-  const PackingListScreen({super.key, required this.tripId});
-
-  @override
-  ConsumerState<PackingListScreen> createState() => _PackingListScreenState();
-}
-
-class _PackingListScreenState extends ConsumerState<PackingListScreen> {
-  final _textController = TextEditingController();
-
-  void _addItem() {
-    if (_textController.text.trim().isEmpty) return;
-    final newItem = PackingItem.create(name: _textController.text.trim());
-    ref.read(tripListProvider.notifier).addPackingItem(widget.tripId, newItem);
-    _textController.clear();
-    FocusScope.of(context).unfocus(); // Dismiss keyboard
-  }
+class PackingListScreen extends ConsumerWidget {
+  final Trip trip;
+  const PackingListScreen({super.key, required this.trip});
 
   @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final tripAsync = ref.watch(tripDetailProvider(widget.tripId));
+  Widget build(BuildContext context, WidgetRef ref) {
+    final packingListAsync = ref.watch(packingListProvider(trip));
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Packing List'),
+        title: Text('${trip.title} - Packing List'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset List',
+            onPressed: () =>
+                ref.read(packingListProvider(trip).notifier).resetList(),
+          ),
+        ],
       ),
-      body: tripAsync.when(
-        data: (trip) {
-          if (trip == null) return const Center(child: Text('Trip not found.'));
-          final packingList = trip.packingList;
+      body: packingListAsync.when(
+        data: (list) {
+          if (list == null)
+            return const Center(child: Text('No packing list found.'));
 
-          return Column(
-            children: [
-              Expanded(
-                child: packingList.isEmpty
-                    ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Lottie.asset(
-                        'assets/lottie/empty_travel.json',
-                        width: 200,
-                        height: 200,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Your packing list is empty.',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add your first item below.',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
+          final items = list.items;
+          return ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return CheckboxListTile(
+                value: item.isChecked,
+                onChanged: (_) => ref
+                    .read(packingListProvider(trip).notifier)
+                    .toggleItem(item.id),
+                title: Text(
+                  item.name,
+                  style: TextStyle(
+                    decoration:
+                        item.isChecked ? TextDecoration.lineThrough : null,
                   ),
-                )
-                    : ListView.builder(
-                  itemCount: packingList.length,
-                  itemBuilder: (context, index) {
-                    final item = packingList[index];
-                    return CheckboxListTile(
-                      value: item.isChecked,
-                      onChanged: (bool? value) {
-                        HapticFeedback.lightImpact();
-                        if (value != null) {
-                          item.isChecked = value;
-                          ref.read(tripListProvider.notifier).updatePackingItem(widget.tripId, item);
-                        }
-                      },
-                      title: Text(
-                        item.name,
-                        style: TextStyle(
-                          decoration: item.isChecked ? TextDecoration.lineThrough : null,
-                          color: item.isChecked ? Colors.grey : null,
-                        ),
-                      ),
-                      secondary: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          ref.read(tripListProvider.notifier).deletePackingItem(widget.tripId, item.id);
-                        },
-                      ),
-                    );
-                  },
                 ),
-              ),
-              // Add Item Input Area
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: FormInput(
-                        label: 'New Item',
-                        controller: _textController,
-                        hintText: 'e.g., Sunscreen',
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    PrimaryButton(
-                      text: 'Add',
-                      onPressed: _addItem,
-                    ),
-                  ],
+                secondary: IconButton(
+                  icon:
+                      const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  onPressed: () => ref
+                      .read(packingListProvider(trip).notifier)
+                      .deleteItem(item.id),
                 ),
-              ),
-            ],
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (e, st) => Center(child: Text('Error: $e')),
       ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => _showAddItemDialog(context, ref, trip),
+      ),
+    );
+  }
+
+  void _showAddItemDialog(BuildContext context, WidgetRef ref, Trip trip) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddPackingItemDialog(
+        onAddItem: (name, category) {
+          // Convert ItemCategory to String using .name
+          ref
+              .read(packingListProvider(trip).notifier)
+              .addItem(name, category.name);
+        },
+      ),
+    );
+  }
+}
+
+class _AddPackingItemDialog extends StatefulWidget {
+  final Function(String, ItemCategory) onAddItem;
+  const _AddPackingItemDialog({required this.onAddItem});
+
+  @override
+  State<_AddPackingItemDialog> createState() => _AddPackingItemDialogState();
+}
+
+class _AddPackingItemDialogState extends State<_AddPackingItemDialog> {
+  final _controller = TextEditingController();
+  var _category = ItemCategory.Other;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add New Item'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            decoration: const InputDecoration(labelText: 'Item Name'),
+            autofocus: true,
+          ),
+          DropdownButton<ItemCategory>(
+            value: _category,
+            isExpanded: true,
+            items: ItemCategory.values
+                .map((cat) => DropdownMenuItem(
+                      value: cat,
+                      child: Text(cat.toString().split('.').last),
+                    ))
+                .toList(),
+            onChanged: (val) => setState(() => _category = val!),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_controller.text.isNotEmpty) {
+              widget.onAddItem(_controller.text, _category);
+              Navigator.of(context).pop();
+            }
+          },
+          child: const Text('Add'),
+        ),
+      ],
     );
   }
 }

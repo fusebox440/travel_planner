@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travel_planner/core/design/design_tokens.dart';
+import 'package:travel_planner/widgets/app_drawer.dart';
 
 /// Defines the size variants for the adaptive AppBar.
 enum AppBarSize { compact, normal, large }
@@ -25,7 +26,8 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
     Widget titleWidget = Text(
       title,
       style: size == AppBarSize.large
-          ? theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurface)
+          ? theme.textTheme.headlineMedium
+              ?.copyWith(color: theme.colorScheme.onSurface)
           : theme.textTheme.titleLarge,
     );
 
@@ -60,80 +62,46 @@ class AdaptiveAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-/// A responsive scaffold that adapts its navigation based on screen width.
-/// It shows a side navigation rail on wide screens (>= 900px) and a
-/// bottom navigation bar on narrow screens.
+/// A responsive scaffold that adapts to screen width.
 class ResponsiveScaffold extends StatelessWidget {
   final Widget body;
-  final int selectedIndex;
-  final ValueChanged<int> onDestinationSelected;
-  final List<NavigationRailDestination> destinations;
   final PreferredSizeWidget? appBar;
   final FloatingActionButton? floatingActionButton;
+  final Widget? drawer;
+  final Widget? endDrawer;
+  final bool? resizeToAvoidBottomInset;
+  final Color? backgroundColor;
 
   const ResponsiveScaffold({
     super.key,
     required this.body,
-    required this.selectedIndex,
-    required this.onDestinationSelected,
-    required this.destinations,
     this.appBar,
     this.floatingActionButton,
+    this.drawer,
+    this.endDrawer,
+    this.resizeToAvoidBottomInset,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     const double wideBreakpoint = 900.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth >= wideBreakpoint;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= wideBreakpoint) {
-          // --- WIDE LAYOUT (Side Rail) ---
-          return Scaffold(
-            appBar: appBar,
-            body: Row(
-              children: [
-                NavigationRail(
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: onDestinationSelected,
-                  labelType: NavigationRailLabelType.all,
-                  destinations: destinations,
-                ),
-                const VerticalDivider(thickness: 1, width: 1),
-                Expanded(
-                  // The main content area with consistent padding
-                  child: Padding(
-                    padding: DesignTokens.spacingM,
-                    child: body,
-                  ),
-                ),
-              ],
-            ),
-            floatingActionButton: floatingActionButton,
-          );
-        } else {
-          // --- NARROW LAYOUT (Bottom Bar) ---
-          return Scaffold(
-            appBar: appBar,
-            // The main content area with consistent padding
-            body: Padding(
-              padding: DesignTokens.spacingM,
-              child: body,
-            ),
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: selectedIndex,
-              onTap: onDestinationSelected,
-              items: destinations.map((dest) {
-                return BottomNavigationBarItem(
-                  icon: dest.icon,
-                  label: (dest.label as Text).data,
-                );
-              }).toList(),
-            ),
-            floatingActionButton: floatingActionButton,
-          );
-        }
-      },
+    final drawerToUse = isWideScreen ? null : (drawer ?? const AppDrawer());
+
+    return Scaffold(
+      appBar: appBar,
+      drawer: drawerToUse,
+      endDrawer: endDrawer,
+      body: Padding(
+        padding: DesignTokens.spacingM,
+        child: body,
+      ),
+      floatingActionButton: floatingActionButton,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+      backgroundColor: backgroundColor,
     );
   }
 }

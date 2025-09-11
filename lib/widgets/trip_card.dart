@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:travel_planner/core/theme/grey_mode_adjustments.dart';
 import 'package:travel_planner/src/models/trip.dart';
 import 'package:travel_planner/widgets/skeletons.dart';
@@ -73,11 +72,13 @@ class TripCard extends StatelessWidget {
   final Trip trip;
   final TripCardSize size;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   const TripCard({
     super.key,
     required this.trip,
     required this.onTap,
+    required this.onDelete,
     this.size = TripCardSize.compact,
   });
 
@@ -116,13 +117,26 @@ class TripCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      trip.title,
-                      style: size == TripCardSize.large
-                          ? theme.textTheme.headlineSmall
-                          : theme.textTheme.titleLarge,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            trip.title,
+                            style: size == TripCardSize.large
+                                ? theme.textTheme.headlineSmall
+                                : theme.textTheme.titleLarge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+                          onPressed: onDelete,
+                          tooltip: 'Delete Trip',
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     Text(

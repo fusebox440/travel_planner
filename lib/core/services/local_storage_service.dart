@@ -1,24 +1,23 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:travel_planner/core/services/image_service.dart';
 import 'package:travel_planner/src/models/activity.dart';
 import 'package:travel_planner/src/models/day.dart';
 import 'package:travel_planner/src/models/expense.dart';
-import 'package:travel_planner/src/models/packing_item.dart'; // Import the new model
+import 'package:travel_planner/src/models/packing_item.dart';
 import 'package:travel_planner/src/models/trip.dart';
 
 class LocalStorageService {
   LocalStorageService._privateConstructor();
-  static final LocalStorageService _instance = LocalStorageService._privateConstructor();
+  static final LocalStorageService _instance =
+      LocalStorageService._privateConstructor();
   factory LocalStorageService() => _instance;
 
   static const String _tripsBoxName = 'trips';
   static const String _daysBoxName = 'days';
   static const String _activitiesBoxName = 'activities';
   static const String _expensesBoxName = 'expenses';
-  static const String _packingItemsBoxName = 'packing_items'; // Add new box name
+  static const String _packingItemsBoxName = 'packing_items';
 
   Future<void> init() async {
     try {
@@ -28,13 +27,13 @@ class LocalStorageService {
       Hive.registerAdapter(ActivityAdapter());
       Hive.registerAdapter(ExpenseAdapter());
       Hive.registerAdapter(ExpenseCategoryAdapter());
-      Hive.registerAdapter(PackingItemAdapter()); // Register the new adapter
+      Hive.registerAdapter(PackingItemAdapter());
 
       await Hive.openBox<Trip>(_tripsBoxName);
       await Hive.openBox<Day>(_daysBoxName);
       await Hive.openBox<Activity>(_activitiesBoxName);
       await Hive.openBox<Expense>(_expensesBoxName);
-      await Hive.openBox<PackingItem>(_packingItemsBoxName); // Open the new box
+      await Hive.openBox<PackingItem>(_packingItemsBoxName);
     } catch (e) {
       debugPrint('Error initializing Hive: $e');
       rethrow;
@@ -65,45 +64,37 @@ class LocalStorageService {
     }
   }
 
+  /// Deletes a trip and all its associated data.
   Future<void> deleteTrip(String id) async {
     try {
-      final box = _getTripsBox();
-      await box.delete(id);
-    } catch (e) {
-      debugPrint('Error deleting trip $id: $e');
-      rethrow;
-    }
-  }
-
-  Future<File> exportTripsToJson() async {
-    final trips = getTrips();
-    final jsonString = jsonEncode(trips.map((trip) => trip.toJson()).toList());
-
-    final tempDir = await getTemporaryDirectory();
-    final file = File('${tempDir.path}/travel_planner_backup.json');
-    await file.writeAsString(jsonString);
-    return file;
-  }
-
-  Future<void> importTripsFromJson(String filePath) async {
-    try {
-      final file = File(filePath);
-      final jsonString = await file.readAsString();
-      final List<dynamic> tripList = jsonDecode(jsonString);
-
       final tripsBox = _getTripsBox();
-      final dayBox = Hive.box<Day>(_daysBoxName);
+      final tripToDelete = tripsBox.get(id);
 
-      for (final tripJson in tripList) {
-        if (tripJson is Map<String, dynamic> && tripJson.containsKey('id')) {
-          final trip = Trip.fromJson(tripJson, dayBox);
-          if (!tripsBox.containsKey(trip.id)) {
-            await tripsBox.put(trip.id, trip);
+      if (tripToDelete != null) {
+        // 1. Delete all associated images from device storage
+        for (final day in tripToDelete.days) {
+          for (final activity in day.activities) {
+            await ImageService().deleteMultipleImages(activity.imagePaths);
           }
         }
+
+        // 2. Delete all associated PackingItems
+        final packingItemsBox = Hive.box<PackingItem>(_packingItemsBoxName);
+        final packingItemKeys =
+            tripToDelete.packingList.map((item) => item.id).toList();
+        await packingItemsBox.deleteAll(packingItemKeys);
+
+        // 3. Delete all associated Days and their Activities
+        final daysBox = Hive.box<Day>(_daysBoxName);
+        final dayKeys = tripToDelete.days.map((day) => day.id).toList();
+        await daysBox.deleteAll(dayKeys);
+
+        // 4. Finally, delete the trip itself
+        await tripsBox.delete(id);
+        debugPrint('Successfully deleted trip $id and all associated data.');
       }
     } catch (e) {
-      debugPrint("Error importing from JSON: $e");
+      debugPrint('Error deleting trip $id: $e');
       rethrow;
     }
   }

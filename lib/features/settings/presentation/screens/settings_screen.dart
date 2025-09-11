@@ -9,6 +9,7 @@ import 'package:travel_planner/core/services/settings_service.dart';
 import 'package:travel_planner/core/theme/app_theme.dart';
 import 'package:travel_planner/features/trips/presentation/providers/trip_providers.dart';
 
+// ... (reduceMotionProvider and its Notifier remain the same)
 final reduceMotionProvider = StateNotifierProvider<ReduceMotionNotifier, bool>((ref) {
   return ReduceMotionNotifier();
 });
@@ -108,6 +109,21 @@ class SettingsScreen extends ConsumerWidget {
             },
           ),
           const Divider(),
+
+          // --- THIS IS THE NEW SECTION ---
+          _SectionHeader(title: 'Tools'),
+          ListTile(
+            leading: const Icon(Icons.currency_exchange),
+            title: const Text('Currency Converter'),
+            subtitle: const Text('Check the latest exchange rates.'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/currency-converter');
+            },
+          ),
+          const Divider(),
+          // -----------------------------
+
           _SectionHeader(title: 'Data Management'),
           ListTile(
             title: const Text('Backup Now'),
@@ -148,7 +164,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
