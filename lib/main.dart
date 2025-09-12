@@ -26,6 +26,7 @@ import 'package:travel_planner/features/assistant/models/chat_session.dart';
 import 'package:travel_planner/features/assistant/models/chat_message.dart';
 import 'package:travel_planner/features/reviews/domain/models/review.dart';
 import 'package:travel_planner/features/assistant/models/nlu_intent.dart';
+import 'package:travel_planner/features/budget/models/receipt.dart';
 
 import 'package:travel_planner/core/services/local_storage_service.dart';
 import 'package:travel_planner/core/services/notification_service.dart';
@@ -98,10 +99,14 @@ Future<void> main() async {
   Hive.registerAdapter(TransportationDetailsAdapter()); // typeId: 30
 
   // Additional Feature Models (30+)
-  Hive.registerAdapter(ReviewAdapter()); // typeId: 30
-  Hive.registerAdapter(ReviewUserAdapter()); // typeId: 31
-  Hive.registerAdapter(IntentTypeAdapter()); // typeId: 32
-  Hive.registerAdapter(NluIntentAdapter()); // typeId: 33
+  Hive.registerAdapter(ReviewAdapter()); // typeId: 31
+  Hive.registerAdapter(ReviewUserAdapter()); // typeId: 32
+  Hive.registerAdapter(IntentTypeAdapter()); // typeId: 33
+  Hive.registerAdapter(NluIntentAdapter()); // typeId: 34
+  Hive.registerAdapter(ExpenseSubCategoryAdapter()); // typeId: 35
+  Hive.registerAdapter(ReceiptAdapter()); // typeId: 36
+  Hive.registerAdapter(ReceiptStatusAdapter()); // typeId: 37
+  Hive.registerAdapter(PaymentMethodAdapter()); // typeId: 38
 
   // Open necessary boxes
   await Hive.openBox<Booking>('bookings');

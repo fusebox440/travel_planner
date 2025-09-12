@@ -49,10 +49,10 @@ dependencies:
   flutter_native_splash: ^2.4.0 # <-- Re-added from previous step
 
   # Analytics & Monitoring
-  firebase_core: ^2.24.2
+  firebase_core: ^2.25.0
+  firebase_performance: ^0.9.3
   firebase_analytics: ^10.8.0
   firebase_crashlytics: ^3.4.9
-  firebase_performance: ^0.9.3+8
 
   # Utilities
   intl: ^0.18.1
@@ -66,6 +66,13 @@ dependencies:
   rxdart: ^0.27.7
   connectivity_plus: ^5.0.2
   mime: ^1.0.5
+
+  # Export functionality
+  csv: ^5.1.1
+  pdf: ^3.10.7
+
+  # OCR functionality
+  google_ml_kit: ^0.16.0
 
 
 dev_dependencies:

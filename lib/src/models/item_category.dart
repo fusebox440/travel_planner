@@ -2,7 +2,7 @@ import 'package:hive/hive.dart';
 
 part 'item_category.g.dart';
 
-@HiveType(typeId: 25) // Enum Types range 20-29, next available is 25
+@HiveType(typeId: 27) // Enum Types range 20-29, next available is 27
 enum ItemCategory {
   @HiveField(0)
   Clothing,

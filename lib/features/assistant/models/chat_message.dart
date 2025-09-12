@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 
 part 'chat_message.g.dart';
 
-@HiveType(typeId: 23) // Enum range 20-29
+@HiveType(typeId: 25) // Enum range 20-29
 enum MessageSender {
   @HiveField(0)
   user,
