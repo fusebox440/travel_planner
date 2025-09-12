@@ -6,16 +6,19 @@ import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../src/models/expense.dart';
 import '../data/expense_repository.dart';
+import '../data/receipt_repository.dart';
 
 class ExportService {
   static final ExportService _instance = ExportService._internal();
   factory ExportService() => _instance;
-
-  final ExpenseRepository _expenseRepository = ExpenseRepository();
-
-  ExportService._internal();
-
-  Future<ExportResult> exportToCSV({
+  
+  late final ExpenseRepository _expenseRepository;
+  
+  ExportService._internal() {
+    _expenseRepository = HiveExpenseRepository(
+      receiptRepository: HiveReceiptRepository(),
+    );
+  }  Future<ExportResult> exportToCSV({
     DateTime? startDate,
     DateTime? endDate,
     List<ExpenseCategory>? categories,

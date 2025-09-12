@@ -300,7 +300,7 @@ class HiveExpenseRepository implements ExpenseRepository {
       throw Exception('Expense not found');
     }
 
-    final updatedReceiptIds = [...(expense.receiptIds ?? [])]
+    final updatedReceiptIds = <String>[...(expense.receiptIds ?? [])]
       ..remove(receiptId);
 
     final updatedExpense = expense.copyWith(receiptIds: updatedReceiptIds);
