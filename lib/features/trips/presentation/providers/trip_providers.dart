@@ -24,7 +24,8 @@ final tripRepositoryProvider = Provider<ITripRepository>((ref) {
 });
 
 // 3. Provider to manage the list of all trips
-final tripListProvider = AsyncNotifierProvider<TripListNotifier, List<Trip>>(() {
+final tripListProvider =
+    AsyncNotifierProvider<TripListNotifier, List<Trip>>(() {
   return TripListNotifier();
 });
 
@@ -70,6 +71,11 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
     state = await AsyncValue.guard(() async {
       final trip = state.value?.firstWhere((t) => t.id == tripId);
       if (trip != null) {
+        // Save the day to its own Hive box first
+        final daysBox = Hive.box<Day>('days');
+        await daysBox.put(day.id, day);
+
+        // Then add it to the trip's days list
         trip.days.add(day);
         await trip.save();
       }
@@ -77,11 +83,17 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
     });
   }
 
-  Future<void> addActivityToDay(String tripId, String dayId, Activity activity) async {
+  Future<void> addActivityToDay(
+      String tripId, String dayId, Activity activity) async {
     state = await AsyncValue.guard(() async {
       final trip = state.value?.firstWhere((t) => t.id == tripId);
       final day = trip?.days.firstWhere((d) => d.id == dayId);
       if (day != null) {
+        // Save the activity to its own Hive box first
+        final activitiesBox = Hive.box<Activity>('activities');
+        await activitiesBox.put(activity.id, activity);
+
+        // Then add it to the day's activities list
         day.activities.add(activity);
         await day.save();
       }
@@ -89,21 +101,30 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
     });
   }
 
-  Future<void> deleteActivity(String tripId, String dayId, String activityId) async {
+  Future<void> deleteActivity(
+      String tripId, String dayId, String activityId) async {
     state = await AsyncValue.guard(() async {
       final trip = state.value?.firstWhere((t) => t.id == tripId);
       final day = trip?.days.firstWhere((d) => d.id == dayId);
       if (day != null) {
-        final activityToDelete = day.activities.firstWhere((a) => a.id == activityId);
+        final activityToDelete =
+            day.activities.firstWhere((a) => a.id == activityId);
         await ImageService().deleteMultipleImages(activityToDelete.imagePaths);
+
+        // Remove from day's activities list
         day.activities.removeWhere((a) => a.id == activityId);
         await day.save();
+
+        // Also delete from the activities Hive box
+        final activitiesBox = Hive.box<Activity>('activities');
+        await activitiesBox.delete(activityId);
       }
       return state.value!;
     });
   }
 
-  Future<void> toggleActivityReminder(String tripId, String dayId, String activityId, bool setReminder) async {
+  Future<void> toggleActivityReminder(
+      String tripId, String dayId, String activityId, bool setReminder) async {
     state = await AsyncValue.guard(() async {
       final trip = state.value?.firstWhere((t) => t.id == tripId);
       final day = trip?.days.firstWhere((d) => d.id == dayId);
@@ -112,11 +133,13 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
       if (activity != null) {
         if (setReminder) {
           final reminderId = DateTime.now().millisecondsSinceEpoch % 2147483647;
-          final reminderTime = activity.startTime.subtract(const Duration(minutes: 15));
+          final reminderTime =
+              activity.startTime.subtract(const Duration(minutes: 15));
           await NotificationService().scheduleReminder(
             id: reminderId,
             title: trip!.title,
-            body: 'Upcoming: ${activity.title} at ${DateFormat.jm().format(activity.startTime)}',
+            body:
+                'Upcoming: ${activity.title} at ${DateFormat.jm().format(activity.startTime)}',
             scheduledTime: reminderTime,
           );
           activity.reminderId = reminderId;
@@ -169,7 +192,8 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
     });
   }
 
-  Future<void> addPackingListFromTemplate(String tripId, List<PackingItem> items) async {
+  Future<void> addPackingListFromTemplate(
+      String tripId, List<PackingItem> items) async {
     state = await AsyncValue.guard(() async {
       final trip = state.value?.firstWhere((t) => t.id == tripId);
       if (trip != null) {
@@ -187,7 +211,8 @@ class TripListNotifier extends AsyncNotifier<List<Trip>> {
 }
 
 // 4. Provider to get a single trip by its ID
-final tripDetailProvider = FutureProvider.family<Trip?, String>((ref, tripId) async {
+final tripDetailProvider =
+    FutureProvider.family<Trip?, String>((ref, tripId) async {
   final trips = await ref.watch(tripListProvider.future);
   try {
     return trips.firstWhere((trip) => trip.id == tripId);

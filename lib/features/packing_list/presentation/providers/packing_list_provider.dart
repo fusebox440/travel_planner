@@ -68,8 +68,11 @@ class PackingListNotifier extends StateNotifier<AsyncValue<PackingList?>> {
     if (item != null) {
       final updatedItem = item.copyWith(isPacked: !item.isPacked);
       await updatedItem.save();
-      // Trigger state refresh to update UI
-      state = AsyncValue.data(list);
+
+      // Create a new list object to trigger state refresh
+      final updatedList = list.copyWith(itemIds: list.itemIds);
+      await _service.updatePackingList(updatedList);
+      state = AsyncValue.data(updatedList);
     }
   }
 

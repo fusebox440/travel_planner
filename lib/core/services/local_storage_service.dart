@@ -22,12 +22,7 @@ class LocalStorageService {
   Future<void> init() async {
     try {
       await Hive.initFlutter();
-      Hive.registerAdapter(TripAdapter());
-      Hive.registerAdapter(DayAdapter());
-      Hive.registerAdapter(ActivityAdapter());
-      Hive.registerAdapter(ExpenseAdapter());
-      Hive.registerAdapter(ExpenseCategoryAdapter());
-      Hive.registerAdapter(PackingItemAdapter());
+      // Adapter registrations moved to main.dart to avoid duplicates
 
       await Hive.openBox<Trip>(_tripsBoxName);
       await Hive.openBox<Day>(_daysBoxName);

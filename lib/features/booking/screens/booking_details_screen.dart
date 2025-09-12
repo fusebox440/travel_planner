@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/booking.dart';
-import '../providers/booking_provider.dart';
 
 class BookingDetailsScreen extends ConsumerWidget {
   final Booking booking;
@@ -16,13 +15,6 @@ class BookingDetailsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(booking.title),
-        actions: [
-          if (booking.status == BookingStatus.reserved)
-            IconButton(
-              icon: const Icon(Icons.cancel),
-              onPressed: () => _showCancelDialog(context, ref),
-            ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -35,8 +27,7 @@ class BookingDetailsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildPriceSection(),
             const SizedBox(height: 24),
-            if (booking.status == BookingStatus.reserved)
-              _buildReservationButton(context, ref),
+            _buildReservationButton(context, ref),
           ],
         ),
       ),
@@ -180,61 +171,41 @@ class BookingDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildReservationButton(BuildContext context, WidgetRef ref) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: FilledButton.icon(
-        onPressed: () => _confirmReservation(context, ref),
-        icon: const Icon(Icons.check_circle),
-        label: const Text('Confirm Reservation'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
       ),
-    );
-  }
-
-  Future<void> _showCancelDialog(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text(
-          'Are you sure you want to cancel this booking? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('No, Keep it'),
+      child: Column(
+        children: [
+          Icon(
+            Icons.info_outline,
+            color: Colors.grey[600],
+            size: 24,
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Yes, Cancel'),
+          const SizedBox(height: 8),
+          Text(
+            'To book this item, please go to your trip and add it through the itinerary.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[700],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Go back to trip screen
+            },
+            child: const Text('Back to Trip'),
           ),
         ],
       ),
     );
-
-    if (result == true) {
-      await ref.read(savedBookingsProvider.notifier).cancelBooking(booking.id);
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
-    }
-  }
-
-  Future<void> _confirmReservation(BuildContext context, WidgetRef ref) async {
-    try {
-      await ref.read(savedBookingsProvider.notifier).addBooking(booking);
-      if (context.mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   Color _getStatusColor(BookingStatus status) {

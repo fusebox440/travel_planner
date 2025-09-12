@@ -167,8 +167,15 @@ class ReviewService {
   }
 
   /// Process and save a photo for a review
+  /// For web platform, returns the source path as-is since we can't save to file system
   Future<String> processAndSavePhoto(String sourcePath) async {
     try {
+      if (kIsWeb) {
+        // For web platform, return the source path as-is
+        debugPrint('Web review photo processed: $sourcePath');
+        return sourcePath;
+      }
+
       final appDir = await getApplicationDocumentsDirectory();
       final reviewsDir = Directory('${appDir.path}/review_photos');
       if (!await reviewsDir.exists()) {

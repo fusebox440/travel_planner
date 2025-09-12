@@ -27,7 +27,7 @@ class BudgetOverviewScreen extends ConsumerWidget {
             tooltip: 'Manage Companions',
             onPressed: () {
               HapticFeedback.lightImpact();
-              context.push('/budget/$tripId/manage-companions');
+              context.push('/trip/$tripId/budget/manage-companions');
             },
           ),
         ],
@@ -38,7 +38,7 @@ class BudgetOverviewScreen extends ConsumerWidget {
             return EmptyStateWidget(
               icon: Icons.account_balance_wallet_outlined,
               title: 'No Expenses Yet',
-              message:
+              description:
                   'Start tracking your trip expenses by adding your first one.',
             );
           }
@@ -59,7 +59,7 @@ class BudgetOverviewScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           HapticFeedback.lightImpact();
-          context.push('/budget/$tripId/add-expense');
+          context.push('/trip/$tripId/budget/add-expense');
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Expense'),

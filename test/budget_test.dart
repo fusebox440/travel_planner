@@ -11,8 +11,7 @@ void main() {
 
     setUpAll(() async {
       await Hive.initFlutter();
-      Hive.registerAdapter(ExpenseAdapter());
-      Hive.registerAdapter(CompanionAdapter());
+      // Adapters registered in main.dart - avoid duplicates in tests
       expenseBox = await Hive.openBox<Expense>('test_expenses');
       companionBox = await Hive.openBox<Companion>('test_companions');
     });

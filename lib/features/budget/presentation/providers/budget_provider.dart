@@ -20,6 +20,11 @@ final tripCompanionsProvider =
   return budgetService.getTripCompanions(companionIds);
 });
 
+final allCompanionsProvider = FutureProvider<List<Companion>>((ref) async {
+  final budgetService = await ref.watch(budgetServiceProvider.future);
+  return budgetService.getAllCompanions();
+});
+
 final categoryTotalsProvider = FutureProvider.family<
     Map<ExpenseCategory, double>,
     ({String tripId, String currency})>((ref, params) async {

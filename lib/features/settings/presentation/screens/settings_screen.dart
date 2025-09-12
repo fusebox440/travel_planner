@@ -10,7 +10,8 @@ import 'package:travel_planner/core/theme/app_theme.dart';
 import 'package:travel_planner/features/trips/presentation/providers/trip_providers.dart';
 
 // ... (reduceMotionProvider and its Notifier remain the same)
-final reduceMotionProvider = StateNotifierProvider<ReduceMotionNotifier, bool>((ref) {
+final reduceMotionProvider =
+    StateNotifierProvider<ReduceMotionNotifier, bool>((ref) {
   return ReduceMotionNotifier();
 });
 
@@ -30,14 +31,17 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _backupData(BuildContext context) async {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Creating backup...')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Creating backup...')));
     try {
       final backupFile = await BackupService().exportTripsToJson();
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      await Share.shareXFiles([XFile(backupFile.path)], text: 'Here is my Travel Planner backup!');
+      await Share.shareXFiles([XFile(backupFile.path)],
+          text: 'Here is my Travel Planner backup!');
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Backup failed: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Backup failed: $e')));
     }
   }
 
@@ -47,10 +51,15 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Restore Backup'),
-        content: const Text('This will merge trips from the backup file. Existing trips with the same ID will not be replaced. Continue?'),
+        content: const Text(
+            'This will merge trips from the backup file. Existing trips with the same ID will not be replaced. Continue?'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Restore')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Restore')),
         ],
       ),
     );
@@ -58,18 +67,21 @@ class SettingsScreen extends ConsumerWidget {
     if (confirmed != true) return;
 
     try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+      final result = await FilePicker.platform
+          .pickFiles(type: FileType.custom, allowedExtensions: ['json']);
       if (result != null && result.files.single.path != null) {
         final filePath = result.files.single.path!;
         final count = await BackupService().importTripsFromJson(filePath);
         ref.invalidate(tripListProvider);
 
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Restore successful! $count trips imported.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Restore successful! $count trips imported.')));
       }
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Restore failed: $e')));
     }
   }
 
@@ -88,9 +100,15 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Theme'),
             trailing: SegmentedButton<AppThemeMode>(
               segments: const [
-                ButtonSegment(value: AppThemeMode.light, icon: Icon(Icons.wb_sunny_outlined)),
-                ButtonSegment(value: AppThemeMode.dark, icon: Icon(Icons.nightlight_round)),
-                ButtonSegment(value: AppThemeMode.grey, icon: Icon(Icons.color_lens_outlined)),
+                ButtonSegment(
+                    value: AppThemeMode.light,
+                    icon: Icon(Icons.wb_sunny_outlined)),
+                ButtonSegment(
+                    value: AppThemeMode.dark,
+                    icon: Icon(Icons.nightlight_round)),
+                ButtonSegment(
+                    value: AppThemeMode.grey,
+                    icon: Icon(Icons.color_lens_outlined)),
               ],
               selected: {themeMode},
               onSelectionChanged: (newSelection) {
@@ -119,6 +137,24 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () {
               HapticFeedback.lightImpact();
               context.go('/currency-converter');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.book_online),
+            title: const Text('My Bookings'),
+            subtitle: const Text('View and manage your reservations.'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/bookings/my');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.wb_sunny_outlined),
+            title: const Text('Weather Forecast'),
+            subtitle: const Text('Check weather for any destination.'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.go('/weather');
             },
           ),
           const Divider(),
@@ -168,8 +204,8 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-        ),
+              color: Theme.of(context).colorScheme.primary,
+            ),
       ),
     );
   }

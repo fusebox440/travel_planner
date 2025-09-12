@@ -2,7 +2,8 @@ import 'package:hive/hive.dart';
 
 part 'nlu_intent.g.dart';
 
-@HiveType(typeId: 14)
+@HiveType(
+    typeId: 32) // Changed to avoid conflict with itinerary.dart (typeId: 14)
 enum IntentType {
   @HiveField(0)
   searchFlight,
@@ -24,7 +25,8 @@ enum IntentType {
   smallTalk
 }
 
-@HiveType(typeId: 15)
+@HiveType(
+    typeId: 33) // Changed to avoid conflict with booking.dart (typeId: 15)
 class NluIntent extends HiveObject {
   @HiveField(0)
   final IntentType type;

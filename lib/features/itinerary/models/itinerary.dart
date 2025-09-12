@@ -171,6 +171,58 @@ enum ItineraryItemType {
   custom
 }
 
+@HiveType(typeId: 23) // Enum range 20-29
+enum ActivityPriority {
+  @HiveField(0)
+  low,
+  @HiveField(1)
+  medium,
+  @HiveField(2)
+  high,
+  @HiveField(3)
+  critical
+}
+
+@HiveType(typeId: 24) // Enum range 20-29
+enum ActivitySubtype {
+  // Meal subtypes
+  @HiveField(0)
+  breakfast,
+  @HiveField(1)
+  lunch,
+  @HiveField(2)
+  dinner,
+  @HiveField(3)
+  snack,
+
+  // Activity subtypes
+  @HiveField(4)
+  sightseeing,
+  @HiveField(5)
+  shopping,
+  @HiveField(6)
+  entertainment,
+  @HiveField(7)
+  outdoor,
+  @HiveField(8)
+  cultural,
+  @HiveField(9)
+  adventure,
+
+  // Transportation subtypes
+  @HiveField(10)
+  taxi,
+  @HiveField(11)
+  train,
+  @HiveField(12)
+  bus,
+  @HiveField(13)
+  walking,
+
+  @HiveField(14)
+  other
+}
+
 @HiveType(typeId: 16) // Feature models range 10-19
 class ItineraryItem extends HiveObject {
   @HiveField(0)
@@ -200,6 +252,18 @@ class ItineraryItem extends HiveObject {
   @HiveField(8)
   final String? notes;
 
+  @HiveField(9)
+  final ActivityPriority priority;
+
+  @HiveField(10)
+  final ActivitySubtype? subtype;
+
+  @HiveField(11)
+  final double? estimatedCost;
+
+  @HiveField(12)
+  final bool isConfirmed;
+
   ItineraryItem({
     String? id,
     required this.title,
@@ -210,6 +274,10 @@ class ItineraryItem extends HiveObject {
     this.bookingId,
     this.details,
     this.notes,
+    this.priority = ActivityPriority.medium,
+    this.subtype,
+    this.estimatedCost,
+    this.isConfirmed = false,
   }) : id = id ?? const Uuid().v4();
 
   Duration? get duration {
@@ -230,6 +298,10 @@ class ItineraryItem extends HiveObject {
       if (bookingId != null) 'bookingId': bookingId,
       if (details != null) 'details': details,
       if (notes != null) 'notes': notes,
+      'priority': priority.toString(),
+      if (subtype != null) 'subtype': subtype.toString(),
+      if (estimatedCost != null) 'estimatedCost': estimatedCost,
+      'isConfirmed': isConfirmed,
     };
   }
 
@@ -257,6 +329,20 @@ class ItineraryItem extends HiveObject {
       bookingId: json['bookingId'] as String?,
       details: json['details'] as Map<String, dynamic>?,
       notes: json['notes'] as String?,
+      priority: json['priority'] != null
+          ? ActivityPriority.values.firstWhere(
+              (p) => p.toString() == json['priority'],
+              orElse: () => ActivityPriority.medium,
+            )
+          : ActivityPriority.medium,
+      subtype: json['subtype'] != null
+          ? ActivitySubtype.values.firstWhere(
+              (s) => s.toString() == json['subtype'],
+              orElse: () => ActivitySubtype.other,
+            )
+          : null,
+      estimatedCost: json['estimatedCost']?.toDouble(),
+      isConfirmed: json['isConfirmed'] ?? false,
     );
   }
 

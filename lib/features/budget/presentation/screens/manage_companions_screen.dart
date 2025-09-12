@@ -112,7 +112,7 @@ class _ManageCompanionsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final companions = ref.watch(tripCompanionsProvider([]));
+    final companions = ref.watch(allCompanionsProvider);
 
     return Scaffold(
       appBar: AppBar(

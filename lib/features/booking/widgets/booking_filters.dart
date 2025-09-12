@@ -42,17 +42,22 @@ class _BookingFiltersState extends State<BookingFilters> {
     return ExpansionTile(
       title: const Text('Filters'),
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildPriceRangeFilter(),
-              const SizedBox(height: 16),
-              _buildRatingFilter(),
-              const SizedBox(height: 16),
-              _buildAmenitiesFilter(),
-            ],
+        Container(
+          constraints: const BoxConstraints(maxHeight: 300),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildPriceRangeFilter(),
+                  const SizedBox(height: 16),
+                  _buildRatingFilter(),
+                  const SizedBox(height: 16),
+                  _buildAmenitiesFilter(),
+                ],
+              ),
+            ),
           ),
         ),
       ],

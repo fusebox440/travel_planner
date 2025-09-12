@@ -8,6 +8,7 @@ import 'package:travel_planner/features/budget/presentation/screens/manage_compa
 import 'package:travel_planner/features/currency/presentation/screens/currency_converter_screen.dart';
 
 import 'package:travel_planner/features/onboarding/onboarding_screen.dart';
+import 'package:travel_planner/features/packing_list/presentation/screens/packing_list_screen.dart';
 import 'package:travel_planner/features/weather/presentation/screens/weather_screen.dart';
 import 'package:travel_planner/features/settings/presentation/screens/about_screen.dart';
 import 'package:travel_planner/features/settings/presentation/screens/privacy_policy_screen.dart';
@@ -20,6 +21,10 @@ import 'package:travel_planner/features/trips/presentation/screens/trip_edit_scr
 import 'package:travel_planner/features/trips/presentation/screens/trip_list_screen.dart';
 import 'package:travel_planner/features/world_clock/world_clock.dart';
 import 'package:travel_planner/src/models/trip.dart';
+import 'package:travel_planner/features/booking/screens/booking_search_screen.dart';
+import 'package:travel_planner/features/booking/screens/booking_details_screen.dart';
+import 'package:travel_planner/features/booking/screens/my_bookings_screen.dart';
+import 'package:travel_planner/features/booking/models/booking.dart';
 
 // A provider that takes the initial location as a parameter to handle onboarding logic
 final appRouterProvider =
@@ -89,17 +94,14 @@ final appRouterProvider =
               return const SavedPhrasesScreen();
             },
           ),
-          // TODO: Implement packing list feature
           GoRoute(
             path: 'packing-list',
             name: 'packing_list',
             builder: (context, state) {
               // The entire Trip object is passed as an 'extra' parameter
               // to provide metadata for suggestion generation.
-              // TODO: Uncomment when packing list feature is implemented
-              // final trip = state.extra as Trip;
-              // return PackingListScreen(trip: trip);
-              return const Center(child: Text('Coming soon: Packing List'));
+              final trip = state.extra as Trip;
+              return PackingListScreen(trip: trip);
             },
           ),
           GoRoute(
@@ -162,6 +164,24 @@ final appRouterProvider =
         path: '/world-clock',
         name: 'world_clock',
         builder: (context, state) => const WorldClockScreen(),
+      ),
+      // Booking routes
+      GoRoute(
+        path: '/bookings/search',
+        name: 'booking_search',
+        builder: (context, state) => const BookingSearchScreen(),
+      ),
+      GoRoute(
+        path: '/bookings/details',
+        name: 'booking_details',
+        builder: (context, state) => BookingDetailsScreen(
+          booking: state.extra as Booking,
+        ),
+      ),
+      GoRoute(
+        path: '/bookings/my',
+        name: 'my_bookings',
+        builder: (context, state) => const MyBookingsScreen(),
       ),
     ],
   );

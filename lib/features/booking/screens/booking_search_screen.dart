@@ -90,36 +90,38 @@ class _BookingSearchScreenState extends ConsumerState<BookingSearchScreen>
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SearchBar(
-              controller: _searchController,
-              onSubmitted: _handleSearch,
-              hintText: 'Search destinations...',
-              leading: const Icon(Icons.search),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SearchBar(
+                controller: _searchController,
+                onSubmitted: _handleSearch,
+                hintText: 'Search destinations...',
+                leading: const Icon(Icons.search),
+              ),
             ),
-          ),
-          BookingFilters(
-            activeFilters: searchState.activeFilters,
-            onFilterChanged: (filters) {
-              ref.read(bookingSearchProvider.notifier).updateFilters(filters);
-              _handleSearch(_searchController.text);
-            },
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildResultsList(searchState, BookingType.flight),
-                _buildResultsList(searchState, BookingType.hotel),
-                _buildResultsList(searchState, BookingType.car),
-                _buildResultsList(searchState, BookingType.activity),
-              ],
+            BookingFilters(
+              activeFilters: searchState.activeFilters,
+              onFilterChanged: (filters) {
+                ref.read(bookingSearchProvider.notifier).updateFilters(filters);
+                _handleSearch(_searchController.text);
+              },
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildResultsList(searchState, BookingType.flight),
+                  _buildResultsList(searchState, BookingType.hotel),
+                  _buildResultsList(searchState, BookingType.car),
+                  _buildResultsList(searchState, BookingType.activity),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

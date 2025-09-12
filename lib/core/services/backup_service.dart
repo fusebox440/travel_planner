@@ -13,18 +13,35 @@ class BackupService {
   factory BackupService() => _instance;
 
   /// Exports all trips to a timestamped JSON file.
-  Future<File> exportTripsToJson() async {
+  /// On web platform, this creates a downloadable blob instead of a file.
+  Future<dynamic> exportTripsToJson() async {
     final tripsBox = Hive.box<Trip>('trips');
     final trips = tripsBox.values.toList();
     final jsonString = jsonEncode(trips.map((trip) => trip.toJson()).toList());
 
-    final directory = await getApplicationDocumentsDirectory();
-    final timestamp = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
-    final file = File('${directory.path}/travel_planner_backup_$timestamp.json');
+    if (kIsWeb) {
+      // For web platform, create a downloadable blob
+      final timestamp =
+          DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final fileName = 'travel_planner_backup_$timestamp.json';
 
-    await file.writeAsString(jsonString);
-    debugPrint('Backup saved to: ${file.path}');
-    return file;
+      debugPrint('Backup prepared for web download: $fileName');
+      return {
+        'content': jsonString,
+        'fileName': fileName,
+      };
+    } else {
+      // For mobile platforms, save to file system
+      final directory = await getApplicationDocumentsDirectory();
+      final timestamp =
+          DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final file =
+          File('${directory.path}/travel_planner_backup_$timestamp.json');
+
+      await file.writeAsString(jsonString);
+      debugPrint('Backup saved to: ${file.path}');
+      return file;
+    }
   }
 
   /// Imports trips from a JSON file, skipping duplicates.

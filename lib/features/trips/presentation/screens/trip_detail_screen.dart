@@ -65,6 +65,21 @@ class TripDetailScreen extends ConsumerWidget {
                             },
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.search_outlined),
+                            title: const Text('Search Bookings'),
+                            subtitle: const Text(
+                                'Find flights, hotels, cars & activities'),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go('/bookings/search');
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -338,9 +353,9 @@ class _DayCardState extends State<_DayCard> {
                     EmptyStateWidget(
                       icon: Icons.add_task_rounded,
                       title: 'Ready to plan your day?',
-                      message: 'Add your first activity to get started!',
-                      buttonText: 'Add Activity',
-                      onButtonPressed: _showAddActivitySheet,
+                      description: 'Add your first activity to get started!',
+                      actionText: 'Add Activity',
+                      onActionPressed: _showAddActivitySheet,
                     )
                   else
                     ...widget.day.activities.map((activity) => _ActivityCard(

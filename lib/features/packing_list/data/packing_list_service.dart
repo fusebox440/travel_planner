@@ -37,8 +37,13 @@ class PackingListService {
   }
 
   Future<PackingList?> getPackingListForTrip(String tripId) async {
-    return _packingListBox.values.firstWhere((list) => list.tripId == tripId,
-        orElse: () => throw StateError('No element'));
+    try {
+      return _packingListBox.values.firstWhere(
+        (list) => list.tripId == tripId,
+      );
+    } catch (e) {
+      return null; // Return null when no packing list is found for the trip
+    }
   }
 
   Future<void> updatePackingList(PackingList list) async {

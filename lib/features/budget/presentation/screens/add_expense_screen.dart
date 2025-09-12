@@ -57,7 +57,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final companions = ref.watch(tripCompanionsProvider(_splitWithIds));
+    final companions = ref.watch(allCompanionsProvider);
 
     return Scaffold(
       appBar: AppBar(

@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 
 part 'review.g.dart';
 
-@HiveType(typeId: 6)
+@HiveType(typeId: 30) // Changed to avoid conflict with expense.dart (typeId: 6)
 class Review extends HiveObject {
   @HiveField(0)
   final String id;
@@ -140,7 +140,7 @@ class Review extends HiveObject {
       user.hashCode;
 }
 
-@HiveType(typeId: 7)
+@HiveType(typeId: 31) // Changed to avoid conflicts
 class ReviewUser {
   @HiveField(0)
   final String name;

@@ -15,23 +15,32 @@ class ImageService {
 
   // Picks an image from the gallery or camera, compresses it, and saves it locally.
   // Returns the path to the saved file.
+  // For web platform, returns a data URL instead of file path.
   Future<String?> pickAndSaveImage(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile == null) return null;
 
-      final appDir = await getApplicationDocumentsDirectory();
-      final fileName = '${const Uuid().v4()}.jpg';
-      final savedImagePath = '${appDir.path}/$fileName';
+      if (kIsWeb) {
+        // For web platform, return the file path as-is (XFile path)
+        // The web picker already handles the file data internally
+        debugPrint('Web image picked: ${pickedFile.path}');
+        return pickedFile.path;
+      } else {
+        // For mobile platforms, save to file system
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = '${const Uuid().v4()}.jpg';
+        final savedImagePath = '${appDir.path}/$fileName';
 
-      // Compress the image
-      final compressedFile = await FlutterImageCompress.compressAndGetFile(
-        pickedFile.path,
-        savedImagePath,
-        quality: 60, // Adjust quality as needed
-      );
+        // Compress the image
+        final compressedFile = await FlutterImageCompress.compressAndGetFile(
+          pickedFile.path,
+          savedImagePath,
+          quality: 60, // Adjust quality as needed
+        );
 
-      return compressedFile?.path;
+        return compressedFile?.path;
+      }
     } catch (e) {
       debugPrint('Error picking and saving image: $e');
       return null;
@@ -39,7 +48,14 @@ class ImageService {
   }
 
   // Deletes an image file from local storage.
+  // For web platform, this is a no-op since we can't delete browser-managed files.
   Future<void> deleteImage(String path) async {
+    if (kIsWeb) {
+      // For web platform, we can't actually delete files managed by the browser
+      debugPrint('Web image deletion skipped: $path');
+      return;
+    }
+
     try {
       final file = File(path);
       if (await file.exists()) {

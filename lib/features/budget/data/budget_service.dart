@@ -74,6 +74,10 @@ class BudgetService {
         .toList();
   }
 
+  List<Companion> getAllCompanions() {
+    return _companionBox.values.toList();
+  }
+
   // Balance Calculations
   Future<Map<String, double>> calculateBalances(
       String tripId, String targetCurrency) async {
