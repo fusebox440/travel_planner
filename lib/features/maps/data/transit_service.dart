@@ -3,9 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../domain/models/tile_region.dart';
+import 'package:travel_planner/core/config/api_keys.dart';
 
 class TransitService {
-  static const apiKey = 'YOUR_TRANSIT_API_KEY'; // TODO: Move to config
 
   Future<List<TransitStop>> getNearbyStops(LatLng location,
       {double radius = 500}) async {
@@ -16,7 +16,7 @@ class TransitService {
         'lat': location.latitude.toString(),
         'lng': location.longitude.toString(),
         'radius': radius.toString(),
-        'key': apiKey,
+        'key': ApiKeys.transitApi,
       },
     );
 
@@ -63,7 +63,7 @@ class TransitService {
     final url = Uri.https(
       'transit.api.example.com',
       '/stops/$stopId/schedule',
-      {'key': apiKey},
+      {'key': ApiKeys.transitApi},
     );
 
     try {
@@ -101,7 +101,7 @@ class TransitService {
         'to_lat': to.latitude.toString(),
         'to_lng': to.longitude.toString(),
         'depart_at': departAt.toIso8601String(),
-        'key': apiKey,
+        'key': ApiKeys.transitApi,
       },
     );
 

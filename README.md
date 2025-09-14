@@ -199,10 +199,13 @@ flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-4. **Configure API keys**
+4. **Configure API keys** 🔐
 ```bash
-# Create config/keys/api_keys.dart and add your API keys
-cp config/keys/api_keys.dart.example config/keys/api_keys.dart
+# Copy the API keys template
+cp lib/core/config/api_keys_template.dart lib/core/config/api_keys.dart
+
+# Edit api_keys.dart and add your actual API keys
+# See docs/api-keys-setup.md for detailed instructions
 ```
 
 5. **Run the app**

@@ -5,6 +5,7 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../domain/models/place.dart';
+import 'package:travel_planner/core/config/api_keys.dart';
 
 class DirectionsResult {
   final List<LatLng> polylinePoints;
@@ -23,7 +24,6 @@ class DirectionsResult {
 }
 
 class MapsService {
-  static const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // TODO: Move to config
   final _location = Location();
   final _polylinePoints = PolylinePoints();
   StreamController<LocationData>? _locationController;
@@ -68,7 +68,7 @@ class MapsService {
 
   Future<List<Place>> searchPlaces(String query, {LatLng? near}) async {
     final params = {
-      'key': apiKey,
+      'key': ApiKeys.googleMaps,
       'query': query,
     };
 
@@ -108,7 +108,7 @@ class MapsService {
     String mode = 'driving',
   }) async {
     final params = {
-      'key': apiKey,
+      'key': ApiKeys.googleMaps,
       'origin': '${from.latitude},${from.longitude}',
       'destination': '${to.latitude},${to.longitude}',
       'mode': mode,
