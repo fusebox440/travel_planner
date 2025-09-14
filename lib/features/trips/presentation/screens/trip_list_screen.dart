@@ -14,6 +14,7 @@ import 'package:travel_planner/widgets/trip_card.dart';
 
 // Filter providers
 enum TripFilter { all, upcoming, past }
+
 final tripFilterProvider = StateProvider<TripFilter>((ref) => TripFilter.all);
 final searchQueryProvider = StateProvider<String>((ref) => '');
 final filteredTripsProvider = Provider<List<Trip>>((ref) {
@@ -46,7 +47,8 @@ class TripListScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Trip?'),
-        content: Text('Are you sure you want to delete "${trip.title}"? This will also delete all associated days, activities, and photos. This action cannot be undone.'),
+        content: Text(
+            'Are you sure you want to delete "${trip.title}"? This will also delete all associated days, activities, and photos. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -105,13 +107,25 @@ class TripListScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(themeMode == AppThemeMode.light ? Icons.dark_mode_outlined : Icons.light_mode_outlined),
+            icon: Icon(themeMode == AppThemeMode.light
+                ? Icons.dark_mode_outlined
+                : Icons.light_mode_outlined),
             onPressed: () {
               HapticFeedback.lightImpact();
-              final newMode = themeMode == AppThemeMode.light ? AppThemeMode.dark : AppThemeMode.light;
+              final newMode = themeMode == AppThemeMode.light
+                  ? AppThemeMode.dark
+                  : AppThemeMode.light;
               ref.read(themeProvider.notifier).setThemeMode(newMode);
             },
             tooltip: 'Toggle Theme',
+          ),
+          IconButton(
+            icon: const Icon(Icons.analytics_outlined),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.go('/analytics');
+            },
+            tooltip: 'Analytics',
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -130,13 +144,16 @@ class TripListScreen extends ConsumerWidget {
             child: tripsAsyncValue.when(
               data: (trips) {
                 if (trips.isEmpty) return _buildEmptyState(context);
-                if (filteredTrips.isEmpty) return const Center(child: Text('No trips match your search.'));
+                if (filteredTrips.isEmpty)
+                  return const Center(
+                      child: Text('No trips match your search.'));
                 return _buildTripList(context, ref, filteredTrips);
               },
               loading: () => ListView.builder(
                 itemCount: 3,
                 itemBuilder: (context, index) => const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: TripCardSkeleton(),
                 ),
               ),
@@ -191,7 +208,7 @@ class TripListScreen extends ConsumerWidget {
         children: [
           TextField(
             onChanged: (value) =>
-            ref.read(searchQueryProvider.notifier).state = value,
+                ref.read(searchQueryProvider.notifier).state = value,
             decoration: const InputDecoration(
               hintText: 'Search trips...',
               prefixIcon: Icon(Icons.search),
@@ -200,9 +217,18 @@ class TripListScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           SegmentedButton<TripFilter>(
             segments: const [
-              ButtonSegment(value: TripFilter.all, label: Text('All'), icon: Icon(Icons.list_alt)),
-              ButtonSegment(value: TripFilter.upcoming, label: Text('Upcoming'), icon: Icon(Icons.flight_takeoff)),
-              ButtonSegment(value: TripFilter.past, label: Text('Past'), icon: Icon(Icons.history)),
+              ButtonSegment(
+                  value: TripFilter.all,
+                  label: Text('All'),
+                  icon: Icon(Icons.list_alt)),
+              ButtonSegment(
+                  value: TripFilter.upcoming,
+                  label: Text('Upcoming'),
+                  icon: Icon(Icons.flight_takeoff)),
+              ButtonSegment(
+                  value: TripFilter.past,
+                  label: Text('Past'),
+                  icon: Icon(Icons.history)),
             ],
             selected: {ref.watch(tripFilterProvider)},
             onSelectionChanged: (newSelection) {

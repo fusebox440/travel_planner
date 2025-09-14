@@ -68,6 +68,35 @@ class TripDetailScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Card(
                           child: ListTile(
+                            leading: const Icon(Icons.star_outline),
+                            title: const Text('Trip Reviews'),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go('/trip/${trip.id}/reviews',
+                                  extra: {'placeName': trip.title});
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: ListTile(
+                            leading: const Icon(Icons.translate_outlined),
+                            title: const Text('Translator'),
+                            subtitle: const Text('Real-time translation'),
+                            trailing:
+                                const Icon(Icons.arrow_forward_ios, size: 16),
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go('/trip/${trip.id}/translator',
+                                  extra: trip);
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          child: ListTile(
                             leading: const Icon(Icons.search_outlined),
                             title: const Text('Search Bookings'),
                             subtitle: const Text(

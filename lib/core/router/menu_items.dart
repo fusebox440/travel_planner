@@ -12,6 +12,7 @@ class MenuItem {
 /// The list of menu items to show in the drawer.
 const List<MenuItem> menuItems = [
   MenuItem('My Trips', Icons.flight, '/'),
+  MenuItem('Trip Templates', Icons.library_books, '/templates'),
   MenuItem('Assistant', Icons.chat, '/assistant'),
   MenuItem(
       'Currency Converter', Icons.currency_exchange, '/currency-converter'),

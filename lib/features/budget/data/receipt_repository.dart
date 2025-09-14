@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:hive/hive.dart';
-import 'package:uuid/uuid.dart';
 import '../models/receipt.dart';
 import '../services/ocr_service.dart';
 

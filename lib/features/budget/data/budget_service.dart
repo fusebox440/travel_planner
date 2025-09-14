@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:travel_planner/src/models/companion.dart';
 import 'package:travel_planner/src/models/expense.dart';
+import 'package:travel_planner/src/models/trip.dart';
 import 'package:travel_planner/core/services/currency_service.dart';
 
 class BudgetService {
@@ -55,27 +56,49 @@ class BudgetService {
         .toList();
   }
 
-  // Companion Methods
-  Future<void> addCompanion(Companion companion) async {
+  // Companion Methods - now work with trip-specific companions
+  Future<void> addCompanionToTrip(String tripId, Companion companion) async {
+    final tripsBox = Hive.box<Trip>('trips');
+    final trip = tripsBox.get(tripId);
+    if (trip != null) {
+      // First save the companion to its own box
+      await _companionBox.put(companion.id, companion);
+
+      // Then add it to the trip's companions list
+      trip.companions.add(companion);
+      await trip.save();
+    }
+  }
+
+  Future<void> updateCompanionInTrip(String tripId, Companion companion) async {
+    // Update the companion in the global companion box
     await _companionBox.put(companion.id, companion);
+
+    // The companion reference in the trip's HiveList will automatically update
+    // since HiveList maintains references to objects in the box
   }
 
-  Future<void> updateCompanion(Companion companion) async {
-    await _companionBox.put(companion.id, companion);
+  Future<void> deleteCompanionFromTrip(
+      String tripId, String companionId) async {
+    final tripsBox = Hive.box<Trip>('trips');
+    final trip = tripsBox.get(tripId);
+    if (trip != null) {
+      // Remove from trip's companions list
+      trip.companions.removeWhere((comp) => comp.id == companionId);
+      await trip.save();
+
+      // Also delete from the global companion box
+      await _companionBox.delete(companionId);
+    }
   }
 
-  Future<void> deleteCompanion(String id) async {
-    await _companionBox.delete(id);
-  }
-
-  List<Companion> getTripCompanions(List<String> companionIds) {
-    return _companionBox.values
-        .where((companion) => companionIds.contains(companion.id))
-        .toList();
-  }
-
-  List<Companion> getAllCompanions() {
-    return _companionBox.values.toList();
+  List<Companion> getTripCompanions(String tripId) {
+    final tripsBox = Hive.box<Trip>('trips');
+    final trip = tripsBox.get(tripId);
+    if (trip != null) {
+      return trip.companions.toList();
+    }
+    return [];
   }
 
   // Balance Calculations

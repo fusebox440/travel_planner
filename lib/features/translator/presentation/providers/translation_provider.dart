@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:travel_planner/features/translator/data/translation_service.dart';
+import 'package:travel_planner/features/translator/domain/models/translation.dart';
 
 // Initialize and provide the translation service
 final translationServiceProvider = Provider<TranslationService>((ref) {

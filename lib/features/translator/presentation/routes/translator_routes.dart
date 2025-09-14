@@ -1,13 +1,10 @@
 import 'package:go_router/go_router.dart';
 import 'package:travel_planner/features/translator/presentation/screens/saved_phrases_screen.dart';
 import 'package:travel_planner/features/translator/presentation/screens/translator_screen.dart';
-
-import 'package:go_router/go_router.dart';
-import 'package:travel_planner/features/translator/presentation/screens/saved_phrases_screen.dart';
-import 'package:travel_planner/features/translator/presentation/screens/translator_screen.dart';
 import 'package:travel_planner/src/models/trip.dart';
 import 'package:travel_planner/src/models/day.dart';
 import 'package:travel_planner/src/models/packing_item.dart';
+import 'package:travel_planner/src/models/companion.dart';
 import 'package:hive/hive.dart';
 
 final translatorRoutes = [
@@ -30,6 +27,7 @@ final translatorRoutes = [
         lastModified: now,
         days: HiveList(Hive.box<Day>('days')),
         packingList: HiveList(Hive.box<PackingItem>('packing_items')),
+        companions: HiveList(Hive.box<Companion>('companions')),
       );
       return TranslatorScreen(trip: trip);
     },

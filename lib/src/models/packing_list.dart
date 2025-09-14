@@ -4,9 +4,25 @@ import 'packing_item.dart';
 
 part 'packing_list.g.dart';
 
-enum TripType { business, leisure, adventure }
+@HiveType(typeId: 50)
+enum TripType {
+  @HiveField(0)
+  business,
+  @HiveField(1)
+  leisure,
+  @HiveField(2)
+  adventure,
+}
 
-enum Weather { hot, mild, cold }
+@HiveType(typeId: 51)
+enum WeatherCondition {
+  @HiveField(0)
+  hot,
+  @HiveField(1)
+  mild,
+  @HiveField(2)
+  cold,
+}
 
 @HiveType(typeId: 4) // Core models range 0-9
 class PackingList extends HiveObject {
@@ -26,7 +42,7 @@ class PackingList extends HiveObject {
   final int durationInDays;
 
   @HiveField(5)
-  final Weather weather;
+  final WeatherCondition weather;
 
   @HiveField(6)
   final DateTime createdAt;
@@ -39,12 +55,22 @@ class PackingList extends HiveObject {
 
   // Getter to retrieve actual PackingItem objects
   List<PackingItem> get items {
-    final box = Hive.box<PackingItem>('packing_items');
-    return itemIds
-        .map((id) => box.get(id))
-        .where((item) => item != null)
-        .cast<PackingItem>()
-        .toList();
+    try {
+      if (Hive.isBoxOpen('packing_items')) {
+        final box = Hive.box<PackingItem>('packing_items');
+        return itemIds
+            .map((id) => box.get(id))
+            .where((item) => item != null)
+            .cast<PackingItem>()
+            .toList();
+      } else {
+        // Return empty list if box is not open instead of crashing
+        return [];
+      }
+    } catch (e) {
+      // Return empty list on any error to prevent crashes
+      return [];
+    }
   }
 
   PackingList({
@@ -64,7 +90,7 @@ class PackingList extends HiveObject {
     required String title,
     required TripType tripType,
     required int durationInDays,
-    required Weather weather,
+    required WeatherCondition weather,
   }) {
     final now = DateTime.now();
     return PackingList(
@@ -84,7 +110,7 @@ class PackingList extends HiveObject {
     String? title,
     TripType? tripType,
     int? durationInDays,
-    Weather? weather,
+    WeatherCondition? weather,
     List<String>? itemIds,
   }) {
     return PackingList(
@@ -121,7 +147,8 @@ class PackingList extends HiveObject {
       title: json['title'],
       tripType: TripType.values.firstWhere((e) => e.name == json['tripType']),
       durationInDays: json['durationInDays'],
-      weather: Weather.values.firstWhere((e) => e.name == json['weather']),
+      weather:
+          WeatherCondition.values.firstWhere((e) => e.name == json['weather']),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       itemIds: List<String>.from(json['itemIds'] ?? []),

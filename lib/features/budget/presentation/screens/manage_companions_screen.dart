@@ -84,7 +84,8 @@ class _ManageCompanionsScreenState
 
                 final budgetService =
                     await ref.read(budgetServiceProvider.future);
-                await budgetService.addCompanion(companion);
+                await budgetService.addCompanionToTrip(
+                    widget.tripId, companion);
 
                 if (!mounted) return;
                 Navigator.pop(context);
@@ -93,6 +94,9 @@ class _ManageCompanionsScreenState
                 _nameController.clear();
                 _emailController.clear();
                 _phoneController.clear();
+
+                // Invalidate the provider to refresh the UI
+                ref.invalidate(tripCompanionsProvider(widget.tripId));
               }
             },
             child: const Text('Add'),
@@ -112,7 +116,7 @@ class _ManageCompanionsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final companions = ref.watch(allCompanionsProvider);
+    final companions = ref.watch(tripCompanionsProvider(widget.tripId));
 
     return Scaffold(
       appBar: AppBar(
@@ -167,7 +171,11 @@ class _ManageCompanionsScreenState
                       HapticFeedback.lightImpact();
                       final budgetService =
                           await ref.read(budgetServiceProvider.future);
-                      await budgetService.deleteCompanion(companion.id);
+                      await budgetService.deleteCompanionFromTrip(
+                          widget.tripId, companion.id);
+
+                      // Invalidate the provider to refresh the UI
+                      ref.invalidate(tripCompanionsProvider(widget.tripId));
                     }
                   },
                 ),

@@ -78,9 +78,9 @@ class ItineraryScreen extends ConsumerWidget {
           if (oldIndex < newIndex) {
             newIndex -= 1;
           }
-          state.itinerary!.reorderDays(oldIndex, newIndex);
-          ref.read(itineraryProvider(tripId).notifier).state =
-              state.copyWith(itinerary: state.itinerary);
+          ref
+              .read(itineraryProvider(tripId).notifier)
+              .reorderDays(oldIndex, newIndex);
         },
         itemBuilder: (context, index) {
           final day = state.itinerary!.days[index];

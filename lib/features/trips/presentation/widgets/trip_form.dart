@@ -10,6 +10,7 @@ import 'package:travel_planner/features/trips/presentation/widgets/location_resu
 import 'package:travel_planner/features/trips/presentation/widgets/map_picker.dart';
 import 'package:travel_planner/src/models/day.dart';
 import 'package:travel_planner/src/models/packing_item.dart';
+import 'package:travel_planner/src/models/companion.dart';
 import 'package:travel_planner/src/models/trip.dart';
 import 'package:travel_planner/widgets/cover_image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -58,29 +59,30 @@ class _TripFormState extends ConsumerState<TripForm> {
       final isEditing = widget.initialTrip != null;
       final tripToSave = isEditing
           ? widget.initialTrip!.copyWith(
-        title: _titleController.text,
-        locationName: _locationController.text,
-        locationLat: _selectedLat,
-        locationLng: _selectedLng,
-        startDate: _startDate,
-        endDate: _endDate,
-        lastModified: DateTime.now(),
-        imageUrl: _imageUrl,
-      )
+              title: _titleController.text,
+              locationName: _locationController.text,
+              locationLat: _selectedLat,
+              locationLng: _selectedLng,
+              startDate: _startDate,
+              endDate: _endDate,
+              lastModified: DateTime.now(),
+              imageUrl: _imageUrl,
+            )
           : Trip(
-        id: const Uuid().v4(),
-        title: _titleController.text,
-        locationName: _locationController.text,
-        locationLat: _selectedLat ?? 0,
-        locationLng: _selectedLng ?? 0,
-        startDate: _startDate,
-        endDate: _endDate,
-        createdAt: DateTime.now(),
-        lastModified: DateTime.now(),
-        days: HiveList(Hive.box<Day>('days')),
-        imageUrl: _imageUrl,
-        packingList: HiveList(Hive.box<PackingItem>('packing_items')),
-      );
+              id: const Uuid().v4(),
+              title: _titleController.text,
+              locationName: _locationController.text,
+              locationLat: _selectedLat ?? 0,
+              locationLng: _selectedLng ?? 0,
+              startDate: _startDate,
+              endDate: _endDate,
+              createdAt: DateTime.now(),
+              lastModified: DateTime.now(),
+              days: HiveList(Hive.box<Day>('days')),
+              imageUrl: _imageUrl,
+              packingList: HiveList(Hive.box<PackingItem>('packing_items')),
+              companions: HiveList(Hive.box<Companion>('companions')),
+            );
       try {
         if (isEditing) {
           await ref.read(tripListProvider.notifier).updateTrip(tripToSave);
@@ -182,8 +184,10 @@ class _TripFormState extends ConsumerState<TripForm> {
               icon: const Icon(Icons.map_outlined),
               label: const Text('Pick on Map'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                backgroundColor:
+                    Theme.of(context).colorScheme.secondaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onSecondaryContainer,
               ),
             ),
             SizedBox(height: DesignTokens.spacingM.top),
@@ -193,7 +197,8 @@ class _TripFormState extends ConsumerState<TripForm> {
                   child: InkWell(
                     onTap: () => _selectDate(context, true),
                     child: InputDecorator(
-                      decoration: const InputDecoration(labelText: 'Start Date'),
+                      decoration:
+                          const InputDecoration(labelText: 'Start Date'),
                       child: Text(dateFormat.format(_startDate)),
                     ),
                   ),
@@ -215,7 +220,8 @@ class _TripFormState extends ConsumerState<TripForm> {
                 padding: EdgeInsets.only(top: DesignTokens.spacingXS.top),
                 child: Text(
                   'End date must be after start date.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.error, fontSize: 12),
                 ),
               ),
             SizedBox(height: DesignTokens.spacingXL.top),
@@ -224,7 +230,8 @@ class _TripFormState extends ConsumerState<TripForm> {
               style: ElevatedButton.styleFrom(
                 padding: DesignTokens.spacingM,
               ),
-              child: Text(widget.initialTrip != null ? 'Save Changes' : 'Create Trip'),
+              child: Text(
+                  widget.initialTrip != null ? 'Save Changes' : 'Create Trip'),
             ),
           ],
         ),

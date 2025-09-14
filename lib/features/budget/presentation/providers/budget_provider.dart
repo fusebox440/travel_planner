@@ -14,16 +14,16 @@ final tripExpensesProvider =
 });
 
 final tripCompanionsProvider =
-    FutureProvider.family<List<Companion>, List<String>>(
-        (ref, companionIds) async {
+    FutureProvider.family<List<Companion>, String>((ref, tripId) async {
   final budgetService = await ref.watch(budgetServiceProvider.future);
-  return budgetService.getTripCompanions(companionIds);
+  return budgetService.getTripCompanions(tripId);
 });
 
-final allCompanionsProvider = FutureProvider<List<Companion>>((ref) async {
-  final budgetService = await ref.watch(budgetServiceProvider.future);
-  return budgetService.getAllCompanions();
-});
+// Remove global companions provider since companions are now trip-specific
+// final allCompanionsProvider = FutureProvider<List<Companion>>((ref) async {
+//   final budgetService = await ref.watch(budgetServiceProvider.future);
+//   return budgetService.getAllCompanions();
+// });
 
 final categoryTotalsProvider = FutureProvider.family<
     Map<ExpenseCategory, double>,

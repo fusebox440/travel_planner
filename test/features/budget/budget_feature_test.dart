@@ -67,7 +67,8 @@ void main() {
         splitWithIds: ['user2'],
       ));
 
-      final totals = budgetService.calculateCategoryTotals('test_trip', 'USD');
+      final totals =
+          await budgetService.calculateCategoryTotals('test_trip', 'USD');
       expect(totals[ExpenseCategory.food], 50.0);
       expect(totals[ExpenseCategory.accommodation], 200.0);
       expect(totals[ExpenseCategory.entertainment], null);
@@ -84,7 +85,8 @@ void main() {
         splitWithIds: ['user2', 'user3'],
       ));
 
-      final balances = budgetService.calculateBalances('test_trip', 'USD');
+      final balances =
+          await budgetService.calculateBalances('test_trip', 'USD');
 
       // Payer paid 100 but owes 33.33 (split three ways)
       expect(balances['user1']?.toStringAsFixed(2), '66.67');

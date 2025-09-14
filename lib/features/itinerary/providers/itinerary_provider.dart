@@ -3,7 +3,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/itinerary.dart';
 import '../services/itinerary_service.dart';
 import '../../booking/models/booking.dart';
-import '../../booking/providers/booking_provider.dart';
 
 // Service provider
 final itineraryServiceProvider = Provider((ref) => ItineraryService());
@@ -187,6 +186,14 @@ class ItineraryNotifier extends StateNotifier<ItineraryState> {
       oldIndex,
       newIndex,
     );
+    await _itinerariesBox.put(state.itinerary!.id, state.itinerary!);
+    state = state.copyWith(itinerary: state.itinerary);
+  }
+
+  Future<void> reorderDays(int oldIndex, int newIndex) async {
+    if (state.itinerary == null) return;
+
+    state.itinerary!.reorderDays(oldIndex, newIndex);
     await _itinerariesBox.put(state.itinerary!.id, state.itinerary!);
     state = state.copyWith(itinerary: state.itinerary);
   }

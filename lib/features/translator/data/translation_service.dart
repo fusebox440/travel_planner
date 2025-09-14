@@ -2,42 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
-
-class Translation extends HiveObject {
-  final String sourceText;
-  final String translatedText;
-  final String fromLanguage;
-  final String toLanguage;
-  final DateTime timestamp;
-  final bool isFavorite;
-
-  Translation({
-    required this.sourceText,
-    required this.translatedText,
-    required this.fromLanguage,
-    required this.toLanguage,
-    required this.timestamp,
-    this.isFavorite = false,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'sourceText': sourceText,
-        'translatedText': translatedText,
-        'fromLanguage': fromLanguage,
-        'toLanguage': toLanguage,
-        'timestamp': timestamp.toIso8601String(),
-        'isFavorite': isFavorite,
-      };
-
-  factory Translation.fromJson(Map<String, dynamic> json) => Translation(
-        sourceText: json['sourceText'],
-        translatedText: json['translatedText'],
-        fromLanguage: json['fromLanguage'],
-        toLanguage: json['toLanguage'],
-        timestamp: DateTime.parse(json['timestamp']),
-        isFavorite: json['isFavorite'] ?? false,
-      );
-}
+import 'package:travel_planner/features/translator/domain/models/translation.dart';
 
 class TranslationService {
   static const String _apiBaseUrl = String.fromEnvironment(
@@ -46,7 +11,6 @@ class TranslationService {
   );
   static const String _apiKey = String.fromEnvironment('TRANSLATION_API_KEY');
   static const String _translationsBoxName = 'translations';
-  static const Duration _cacheExpiration = Duration(days: 7);
 
   // Singleton pattern
   TranslationService._privateConstructor();

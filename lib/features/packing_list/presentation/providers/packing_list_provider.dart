@@ -5,8 +5,13 @@ import 'package:travel_planner/src/models/packing_item.dart';
 import 'package:travel_planner/src/models/packing_list.dart';
 import 'package:travel_planner/src/models/trip.dart';
 
-// Provider for the service
-final packingListServiceProvider = Provider((ref) => PackingListService());
+// Provider for the service - ensures initialization
+final packingListServiceProvider = Provider<PackingListService>((ref) {
+  final service = PackingListService();
+  // Initialize immediately when provider is created
+  service.init();
+  return service;
+});
 
 // StateNotifier for a single packing list
 class PackingListNotifier extends StateNotifier<AsyncValue<PackingList?>> {
@@ -21,6 +26,9 @@ class PackingListNotifier extends StateNotifier<AsyncValue<PackingList?>> {
 
   Future<void> _loadOrCreateList() async {
     try {
+      // Ensure service is initialized first
+      await _service.init();
+
       var list = await _service.getPackingListForTrip(_tripId);
       if (list == null) {
         // Create packing list with trip metadata
@@ -28,7 +36,7 @@ class PackingListNotifier extends StateNotifier<AsyncValue<PackingList?>> {
           tripId: _tripId,
           tripType: TripType.leisure, // Fixed enum case
           durationInDays: _trip.endDate.difference(_trip.startDate).inDays,
-          weather: Weather.mild, // Fixed enum reference and case
+          weather: WeatherCondition.mild, // Fixed enum reference and case
         );
       }
       state = AsyncValue.data(list);

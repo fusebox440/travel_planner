@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:travel_planner/features/translator/data/translation_service.dart';
+import 'package:travel_planner/features/translator/domain/models/translation.dart';
 import 'package:travel_planner/features/translator/presentation/providers/translation_provider.dart';
 import 'package:travel_planner/src/models/trip.dart';
 

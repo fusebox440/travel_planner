@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:travel_planner/features/trips/presentation/screens/trip_list_screen.dart';
 import 'package:travel_planner/features/weather/presentation/screens/weather_screen.dart';
 import 'package:travel_planner/features/maps/presentation/screens/map_screen.dart';

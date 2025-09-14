@@ -29,13 +29,14 @@ class TripAdapter extends TypeAdapter<Trip> {
       days: (fields[9] as HiveList).castHiveList(),
       imageUrl: fields[10] as String?,
       packingList: (fields[11] as HiveList).castHiveList(),
+      companions: (fields[12] as HiveList).castHiveList(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Trip obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -59,7 +60,9 @@ class TripAdapter extends TypeAdapter<Trip> {
       ..writeByte(10)
       ..write(obj.imageUrl)
       ..writeByte(11)
-      ..write(obj.packingList);
+      ..write(obj.packingList)
+      ..writeByte(12)
+      ..write(obj.companions);
   }
 
   @override

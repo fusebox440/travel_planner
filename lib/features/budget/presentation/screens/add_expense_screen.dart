@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:travel_planner/core/services/currency_service.dart';
 import 'package:travel_planner/features/budget/presentation/providers/budget_provider.dart';
 import 'package:travel_planner/features/budget/services/voice_to_text_service.dart';
-import 'package:travel_planner/src/models/companion.dart';
 import 'package:travel_planner/src/models/expense.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -179,7 +178,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final companions = ref.watch(allCompanionsProvider);
+    final companions = ref.watch(tripCompanionsProvider(widget.tripId));
 
     return Scaffold(
       appBar: AppBar(

@@ -8,7 +8,7 @@ class MockCurrencyService implements CurrencyService {
   MockCurrencyService({this.shouldFail = false});
 
   @override
-  Future<Map<String, double>> getExchangeRates() async {
+  Future<Map<String, double>> getExchangeRates({String base = 'USD'}) async {
     if (shouldFail) {
       throw Exception('Failed to fetch');
     }
@@ -18,6 +18,41 @@ class MockCurrencyService implements CurrencyService {
       'INR': 83.0,
       'JPY': 150.0,
     };
+  }
+
+  @override
+  List<String> get availableCurrencies => ['USD', 'EUR', 'GBP', 'JPY'];
+
+  @override
+  List<Currency> get availableCurrencyInfo => [
+        Currency(code: 'USD', name: 'US Dollar', symbol: '\$', flag: '🇺🇸'),
+        Currency(code: 'EUR', name: 'Euro', symbol: '€', flag: '🇪🇺'),
+      ];
+
+  @override
+  Set<String> get favoriteCurrencies => {'USD', 'EUR'};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<void> addToFavorites(String currencyCode) async {}
+
+  @override
+  Future<void> removeFromFavorites(String currencyCode) async {}
+
+  @override
+  Future<double> convert(double amount, String from, String to) async =>
+      amount * 0.9;
+
+  @override
+  String formatAmount(double amount, String currencyCode) =>
+      '\$${amount.toStringAsFixed(2)}';
+
+  @override
+  Currency? getCurrencyInfo(String currencyCode) {
+    return Currency(
+        code: currencyCode, name: 'Test Currency', symbol: '\$', flag: '🏳️');
   }
 }
 
@@ -32,7 +67,8 @@ void main() {
       // Assert
       expect(notifier.state.isLoading, false);
       expect(notifier.state.error, null);
-      expect(notifier.state.rates.containsKey('USD'), true); // USD is added automatically
+      expect(notifier.state.rates.containsKey('USD'),
+          true); // USD is added automatically
 
       // Act & Assert for conversions
       final usdToInr = notifier.convertCurrency(10, 'USD', 'INR');

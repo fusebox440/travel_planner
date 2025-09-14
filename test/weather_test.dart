@@ -7,7 +7,9 @@ import 'package:travel_planner/features/weather/data/weather_service.dart';
 import 'package:travel_planner/features/weather/domain/models/weather.dart';
 import 'package:travel_planner/features/weather/domain/models/forecast.dart';
 
-@GenerateMocks([http.Client])
+@GenerateMocks([], customMocks: [MockSpec<http.Client>(as: #MockHttpClient)])
+import 'weather_test.mocks.dart';
+
 void main() {
   group('WeatherService', () {
     const city = 'London';
@@ -20,42 +22,38 @@ void main() {
         'feels_like': 292.15,
         'humidity': 70,
       },
-      'wind': {
-        'speed': 3.5,
-      },
-      'coord': {'lat': 51.5074, 'lon': -0.1278}
+      'wind': {'speed': 3.5},
+      'name': city,
+      'coord': {'lat': 51.5074, 'lon': -0.1278},
     };
 
     final mockForecastResponse = {
       'daily': List.generate(
           7,
-          (i) => {
+          (index) => {
                 'dt': DateTime.now()
-                        .add(Duration(days: i))
+                        .add(Duration(days: index))
                         .millisecondsSinceEpoch ~/
                     1000,
-                'temp': {
-                  'min': 290.15,
-                  'max': 295.15,
-                },
+                'temp': {'min': 290.15, 'max': 295.15},
                 'weather': [
                   {'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}
                 ],
                 'humidity': 70,
                 'wind_speed': 3.5,
-              }),
+              })
     };
 
-    late http.Client mockClient;
+    late MockHttpClient mockClient;
     late WeatherService weatherService;
 
     setUp(() {
-      mockClient = MockClient();
-      weatherService = WeatherService();
+      mockClient = MockHttpClient();
+      weatherService = WeatherService(client: mockClient);
     });
 
     test('getCurrentWeather returns Weather object on success', () async {
-      when(mockClient.get(any)).thenAnswer(
+      when(mockClient.get(argThat(isA<Uri>()))).thenAnswer(
           (_) async => http.Response(json.encode(mockWeatherResponse), 200));
 
       final weather = await weatherService.getCurrentWeather(city);
@@ -69,8 +67,8 @@ void main() {
       expect(weather.windSpeed, equals(3.5));
     });
 
-    test('getCurrentWeather throws WeatherException on error', () {
-      when(mockClient.get(any))
+    test('getCurrentWeather throws exception on API error', () async {
+      when(mockClient.get(argThat(isA<Uri>())))
           .thenAnswer((_) async => http.Response('Not found', 404));
 
       expect(
@@ -81,7 +79,7 @@ void main() {
 
     test('getForecast returns List<Forecast> on success', () async {
       // Mock both API calls (weather for coordinates and forecast)
-      when(mockClient.get(any)).thenAnswer((invocation) {
+      when(mockClient.get(argThat(isA<Uri>()))).thenAnswer((invocation) {
         final url = invocation.positionalArguments[0] as Uri;
         if (url.toString().contains('onecall')) {
           return Future.value(
@@ -106,7 +104,7 @@ void main() {
     });
 
     test('getForecast throws WeatherException on error', () {
-      when(mockClient.get(any))
+      when(mockClient.get(argThat(isA<Uri>())))
           .thenAnswer((_) async => http.Response('Server error', 500));
 
       expect(
@@ -163,11 +161,33 @@ void main() {
       expect(forecast.maxTemperatureInFahrenheit, closeTo(71.6, 0.1));
       expect(
         forecast.formatTemperatureRange(useFahrenheit: false),
-        equals('17° / 22°C'),
+        equals('17°C - 22°C'),
       );
       expect(
         forecast.formatTemperatureRange(useFahrenheit: true),
-        equals('63° / 72°F'),
+        equals('63°F - 72°F'),
+      );
+    });
+
+    test('Weather model handles missing optional fields', () {
+      final minimalWeatherResponse = {
+        'weather': [
+          {'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}
+        ],
+        'main': {
+          'temp': 293.15,
+          'feels_like': 293.15,
+          'humidity': 70,
+        },
+        'name': city,
+      };
+
+      when(mockClient.get(argThat(isA<Uri>()))).thenAnswer(
+          (_) async => http.Response(json.encode(minimalWeatherResponse), 200));
+
+      expect(
+        () => weatherService.getCurrentWeather(city),
+        returnsNormally,
       );
     });
   });

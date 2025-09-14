@@ -20,9 +20,14 @@ class WeatherException implements Exception {
 }
 
 class WeatherService {
-  WeatherService._privateConstructor();
+  final http.Client _client;
+
+  WeatherService._privateConstructor({http.Client? client})
+      : _client = client ?? http.Client();
   static final WeatherService _instance = WeatherService._privateConstructor();
-  factory WeatherService() => _instance;
+  factory WeatherService({http.Client? client}) => client != null
+      ? WeatherService._privateConstructor(client: client)
+      : _instance;
 
   static const _weatherCacheKey = 'weather_cache';
   static const _forecastCacheKey = 'forecast_cache';
@@ -50,7 +55,7 @@ class WeatherService {
         '${ApiKeys.openWeatherMapBaseUrl}/weather?q=$city&appid=${ApiKeys.openWeatherMap}',
       );
 
-      final response = await http.get(url).timeout(
+      final response = await _client.get(url).timeout(
             const Duration(seconds: 10),
             onTimeout: () => throw WeatherException(
               'Request timed out',
@@ -104,7 +109,7 @@ class WeatherService {
         '${ApiKeys.openWeatherMapBaseUrl}/weather?q=$city&appid=${ApiKeys.openWeatherMap}',
       );
 
-      final geoResponse = await http.get(geoUrl).timeout(
+      final geoResponse = await _client.get(geoUrl).timeout(
             const Duration(seconds: 10),
             onTimeout: () => throw WeatherException(
               'Request timed out',
@@ -128,7 +133,7 @@ class WeatherService {
         '${ApiKeys.openWeatherMapBaseUrl}/onecall?lat=$lat&lon=$lon&exclude=current,minutely,hourly,alerts&appid=${ApiKeys.openWeatherMap}',
       );
 
-      final forecastResponse = await http.get(forecastUrl).timeout(
+      final forecastResponse = await _client.get(forecastUrl).timeout(
             const Duration(seconds: 10),
             onTimeout: () => throw WeatherException(
               'Request timed out',

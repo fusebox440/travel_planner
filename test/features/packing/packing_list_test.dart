@@ -3,6 +3,15 @@ import 'package:travel_planner/features/packing_list/data/packing_list_service.d
 import 'package:travel_planner/src/models/packing_item.dart';
 import 'package:travel_planner/src/models/packing_list.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+class MockPathProviderPlatform extends Fake
+    with MockPlatformInterfaceMixin
+    implements PathProviderPlatform {
+  @override
+  Future<String?> getApplicationDocumentsPath() async => '/mock/docs';
+}
 
 void main() {
   group('Packing List Tests', () {
@@ -11,23 +20,45 @@ void main() {
     late PackingListService packingListService;
 
     setUpAll(() async {
+      // Mock the path provider
+      PathProviderPlatform.instance = MockPathProviderPlatform();
+
       await Hive.initFlutter();
-      Hive.registerAdapter(PackingListAdapter());
-      Hive.registerAdapter(PackingItemAdapter());
+
+      // Register adapters if not already registered
+      if (!Hive.isAdapterRegistered(4)) {
+        Hive.registerAdapter(PackingListAdapter());
+      }
+      if (!Hive.isAdapterRegistered(3)) {
+        Hive.registerAdapter(PackingItemAdapter());
+      }
+      if (!Hive.isAdapterRegistered(50)) {
+        Hive.registerAdapter(TripTypeAdapter());
+      }
+      if (!Hive.isAdapterRegistered(51)) {
+        Hive.registerAdapter(WeatherConditionAdapter());
+      }
+
       packingListBox = await Hive.openBox<PackingList>('test_packing_lists');
       packingItemBox = await Hive.openBox<PackingItem>('test_packing_items');
-      packingListService = await PackingListService.getInstance();
+      packingListService = PackingListService();
+      await packingListService.init();
     });
 
     setUp(() async {
       await packingListBox.clear();
       await packingItemBox.clear();
+      // Reset the singleton for testing
+      packingListService.dispose();
     });
 
     test('Create new packing list', () async {
       final packingList = PackingList.create(
         tripId: 'test_trip',
         title: 'Summer Packing List',
+        tripType: TripType.leisure,
+        durationInDays: 5,
+        weather: WeatherCondition.hot,
       );
 
       await packingListService.createPackingList(packingList);
@@ -42,6 +73,9 @@ void main() {
       final packingList = PackingList.create(
         tripId: 'test_trip',
         title: 'Beach Trip List',
+        tripType: TripType.leisure,
+        durationInDays: 7,
+        weather: WeatherCondition.hot,
       );
 
       await packingListService.createPackingList(packingList);
@@ -71,6 +105,9 @@ void main() {
       final packingList = PackingList.create(
         tripId: 'test_trip',
         title: 'Trip List',
+        tripType: TripType.business,
+        durationInDays: 3,
+        weather: WeatherCondition.mild,
       );
 
       await packingListService.createPackingList(packingList);
@@ -92,6 +129,9 @@ void main() {
       final packingList = PackingList.create(
         tripId: 'test_trip',
         title: 'Trip List',
+        tripType: TripType.leisure,
+        durationInDays: 5,
+        weather: WeatherCondition.mild,
       );
 
       await packingListService.createPackingList(packingList);
@@ -130,6 +170,9 @@ void main() {
       final packingList = PackingList.create(
         tripId: 'test_trip',
         title: 'Trip List',
+        tripType: TripType.adventure,
+        durationInDays: 10,
+        weather: WeatherCondition.cold,
       );
 
       await packingListService.createPackingList(packingList);

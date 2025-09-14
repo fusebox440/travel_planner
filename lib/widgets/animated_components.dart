@@ -30,7 +30,6 @@ class _PlayfulButtonState extends State<PlayfulButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {

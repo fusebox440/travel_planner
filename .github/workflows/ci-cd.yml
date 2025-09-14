@@ -1,0 +1,398 @@
+name: Travel Planner CI/CD Pipeline
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  # Code Quality and Analysis
+  analyze:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate mock files
+        run: flutter packages pub run build_runner build --delete-conflicting-outputs
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib/ test/
+
+      - name: Analyze project source
+        run: flutter analyze
+
+      - name: Check for unused dependencies
+        run: flutter pub deps --json | jq '.packages[] | select(.kind=="direct") | .name' | sort
+
+  # Unit and Integration Tests
+  test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: analyze
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+          cache: true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate mock files
+        run: flutter packages pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run unit tests
+        run: flutter test --coverage --reporter expanded
+        env:
+          FLUTTER_TEST: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Generate coverage report
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+          genhtml coverage/lcov.info -o coverage/html
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/html
+
+      # Integration tests (conditional on Firebase setup)
+      - name: Run integration tests
+        run: flutter test integration_test/
+        continue-on-error: true  # Don't fail pipeline if integration tests fail
+        env:
+          FLUTTER_TEST: true
+          FIREBASE_PROJECT_ID: travel-planner-test
+
+  # Security and Vulnerability Scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: analyze
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Get Flutter dependencies  
+        run: flutter pub get
+
+      - name: Run pub audit for vulnerabilities
+        run: flutter pub audit
+        continue-on-error: true
+
+      - name: Check for exposed API keys
+        run: |
+          if grep -r "AIza[0-9A-Za-z\\-_]{35}" lib/ --exclude-dir=*.git; then
+            echo "::error::Potentially exposed API keys found!"
+            exit 1
+          fi
+
+  # Android Build
+  build-android:
+    name: Build Android APK/AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [test, security]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Configure Android signing (if secrets available)
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+          echo "storeFile=keystore.jks" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Build Android APK (Debug)
+        run: flutter build apk --debug
+
+      - name: Build Android APK (Release)
+        run: flutter build apk --release
+        if: github.ref == 'refs/heads/main'
+
+      - name: Build Android App Bundle (Release)  
+        run: flutter build appbundle --release
+        if: github.ref == 'refs/heads/main'
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-apk
+          path: build/app/outputs/flutter-apk/app-*.apk
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+  # iOS Build (macOS runner required)
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Install iOS dependencies
+        run: cd ios && pod install
+
+      - name: Build iOS (No Code Signing)
+        run: flutter build ios --no-codesign
+
+      - name: Create iOS Archive
+        run: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+                     -scheme Runner \
+                     -sdk iphoneos \
+                     -configuration Release \
+                     -archivePath build/Runner.xcarchive \
+                     archive \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload iOS Archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-archive
+          path: ios/build/Runner.xcarchive
+
+  # Performance and Size Analysis
+  performance:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.6'
+          channel: 'stable'
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK for size analysis
+        run: flutter build apk --analyze-size --target-platform android-arm64
+
+      - name: Generate app size report
+        run: |
+          echo "## App Size Report" >> size-report.md
+          echo "Generated on: $(date)" >> size-report.md
+          echo "" >> size-report.md
+          echo "\`\`\`" >> size-report.md
+          flutter build apk --analyze-size --target-platform android-arm64 2>&1 | tail -20 >> size-report.md
+          echo "\`\`\`" >> size-report.md
+
+      - name: Upload size report
+        uses: actions/upload-artifact@v3
+        with:
+          name: size-report
+          path: size-report.md
+
+  # Deployment (Production)
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build-android, build-ios]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Android AAB
+        uses: actions/download-artifact@v3
+        with:
+          name: android-aab
+          path: ./artifacts/
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # Deploy to Firebase App Distribution (Internal Testing)
+      - name: Deploy to Firebase App Distribution
+        run: |
+          echo "Deploying to Firebase App Distribution for internal testing"
+          # firebase appdistribution:distribute artifacts/app-release.aab \
+          #   --app ${{ secrets.FIREBASE_APP_ID }} \
+          #   --groups "internal-testers" \
+          #   --release-notes "CI/CD Pipeline Build - $(date)"
+
+      # Deploy to Google Play Store (Production)  
+      - name: Deploy to Google Play Store
+        if: contains(github.event.head_commit.message, '[deploy]')
+        run: |
+          echo "Deploying to Google Play Store"
+          echo "This would use fastlane or Google Play Console API"
+          # fastlane android production
+
+  # Notification and Reporting
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [analyze, test, security, build-android, build-ios, performance]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate build summary
+        run: |
+          echo "## CI/CD Pipeline Results" > pipeline-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> pipeline-summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> pipeline-summary.md
+          echo "**Triggered by:** ${{ github.event_name }}" >> pipeline-summary.md
+          echo "**Build Time:** $(date)" >> pipeline-summary.md
+          echo "" >> pipeline-summary.md
+          echo "### Job Status:" >> pipeline-summary.md
+          echo "- Code Analysis: ${{ needs.analyze.result }}" >> pipeline-summary.md
+          echo "- Tests: ${{ needs.test.result }}" >> pipeline-summary.md
+          echo "- Security: ${{ needs.security.result }}" >> pipeline-summary.md
+          echo "- Android Build: ${{ needs.build-android.result }}" >> pipeline-summary.md
+          echo "- iOS Build: ${{ needs.build-ios.result }}" >> pipeline-summary.md
+          echo "- Performance: ${{ needs.performance.result }}" >> pipeline-summary.md
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('pipeline-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+# Cleanup old workflow runs (monthly)
+  cleanup:
+    name: Cleanup Old Workflows
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Delete old workflow runs
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: workflows } = await github.rest.actions.listWorkflowsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            for (const workflow of workflows.workflows) {
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflow.id,
+                status: 'completed',
+                per_page: 100,
+              });
+              
+              // Keep last 10 runs, delete the rest
+              const runsToDelete = runs.workflow_runs.slice(10);
+              
+              for (const run of runsToDelete) {
+                if (new Date(run.created_at) < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) {
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    run_id: run.id,
+                  });
+                }
+              }
+            }
+
+# Schedule cleanup monthly
+  schedule:
+    - cron: '0 2 1 * *'  # Run at 2 AM on the 1st of each month

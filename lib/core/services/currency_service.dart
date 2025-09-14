@@ -217,6 +217,9 @@ class CurrencyService {
 
   /// Convert amount from one currency to another
   Future<double> convert(double amount, String from, String to) async {
+    // If same currency, return amount as-is
+    if (from == to) return amount;
+
     if (!_supportedCurrencies.containsKey(from)) {
       throw CurrencyConversionException(
         'Unsupported source currency: $from',

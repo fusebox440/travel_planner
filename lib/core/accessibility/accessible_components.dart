@@ -262,18 +262,22 @@ class AccessibleNavigationRail extends ConsumerWidget {
         destinations: destinations
             .map((dest) => NavigationRailDestination(
                   icon: Semantics(
-                    label: dest.label,
+                    label: dest.label is Text
+                        ? (dest.label as Text).data ?? ''
+                        : 'Navigation item',
                     button: true,
                     child: dest.icon,
                   ),
                   selectedIcon: dest.selectedIcon,
-                  label: AccessibleText(
-                    dest.label ?? '',
-                    style: TextStyle(
-                      fontSize: accessibility.isLargeText ? 14 : 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  label: dest.label is Text
+                      ? AccessibleText(
+                          (dest.label as Text).data ?? '',
+                          style: TextStyle(
+                            fontSize: accessibility.isLargeText ? 14 : 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                      : dest.label,
                 ))
             .toList(),
         selectedIndex: selectedIndex,

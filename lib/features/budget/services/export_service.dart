@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:csv/csv.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -11,14 +10,15 @@ import '../data/receipt_repository.dart';
 class ExportService {
   static final ExportService _instance = ExportService._internal();
   factory ExportService() => _instance;
-  
+
   late final ExpenseRepository _expenseRepository;
-  
+
   ExportService._internal() {
     _expenseRepository = HiveExpenseRepository(
       receiptRepository: HiveReceiptRepository(),
     );
-  }  Future<ExportResult> exportToCSV({
+  }
+  Future<ExportResult> exportToCSV({
     DateTime? startDate,
     DateTime? endDate,
     List<ExpenseCategory>? categories,
@@ -362,8 +362,6 @@ class ExportService {
       // Calculate category totals
       final categoryTotals =
           await _expenseRepository.getTotalsByCategory(tripId: tripId);
-      final subCategoryTotals =
-          await _expenseRepository.getTotalsBySubCategory(tripId: tripId);
       final merchantTotals =
           await _expenseRepository.getTotalsByMerchant(tripId: tripId);
 

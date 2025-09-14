@@ -25,8 +25,15 @@ import 'package:travel_planner/features/booking/models/booking.dart';
 import 'package:travel_planner/features/assistant/models/chat_session.dart';
 import 'package:travel_planner/features/assistant/models/chat_message.dart';
 import 'package:travel_planner/features/reviews/domain/models/review.dart';
+import 'package:travel_planner/features/reviews/data/review_service.dart';
+import 'package:travel_planner/features/packing_list/data/packing_list_service.dart';
+import 'package:travel_planner/features/translator/domain/models/translation.dart';
+import 'package:travel_planner/features/translator/data/translation_service.dart';
+import 'package:travel_planner/features/analytics/domain/models/travel_statistics.dart';
+import 'package:travel_planner/features/analytics/data/analytics_service.dart';
 import 'package:travel_planner/features/assistant/models/nlu_intent.dart';
 import 'package:travel_planner/features/budget/models/receipt.dart';
+import 'package:travel_planner/features/trip_templates/data/hive_adapters.dart';
 
 import 'package:travel_planner/core/services/local_storage_service.dart';
 import 'package:travel_planner/core/services/notification_service.dart';
@@ -107,6 +114,15 @@ Future<void> main() async {
   Hive.registerAdapter(ReceiptAdapter()); // typeId: 36
   Hive.registerAdapter(ReceiptStatusAdapter()); // typeId: 37
   Hive.registerAdapter(PaymentMethodAdapter()); // typeId: 38
+  Hive.registerAdapter(TranslationAdapter()); // typeId: 39
+  Hive.registerAdapter(TravelStatisticsAdapter()); // typeId: 40
+
+  // Trip Templates (41-46)
+  TripTemplateHiveAdapters.registerAdapters();
+
+  // New Enum Types (50+)
+  Hive.registerAdapter(TripTypeAdapter()); // typeId: 50
+  Hive.registerAdapter(WeatherConditionAdapter()); // typeId: 51
 
   // Open necessary boxes
   await Hive.openBox<Booking>('bookings');
@@ -116,14 +132,25 @@ Future<void> main() async {
   await Hive.openBox<Day>('days');
   await Hive.openBox<Activity>('activities');
   await Hive.openBox<Expense>('expenses');
+  await Hive.openBox<Review>('reviews');
+  await Hive.openBox<Translation>('translations');
+  await Hive.openBox<TravelStatistics>('analytics');
 
   // Initialize Services
   await LocalStorageService().init();
   await NotificationService().init();
   await SettingsService().init();
   await OnboardingService().init();
+  await ReviewService().init();
 
-  // Initialize Performance Monitoring
+  // Initialize Packing List Service
+  await PackingListService().init();
+
+  // Initialize Translation Service
+  await TranslationService().init();
+
+  // Initialize Analytics Service
+  await AnalyticsService().init(); // Initialize Performance Monitoring
   if (!kDebugMode) {
     await FirebasePerformance.instance.setPerformanceCollectionEnabled(true);
   }

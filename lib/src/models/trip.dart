@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:travel_planner/src/models/day.dart';
 import 'package:travel_planner/src/models/packing_item.dart';
+import 'package:travel_planner/src/models/companion.dart';
 
 part 'trip.g.dart';
 
@@ -42,6 +43,9 @@ class Trip extends HiveObject {
   @HiveField(11)
   final HiveList<PackingItem> packingList;
 
+  @HiveField(12)
+  final HiveList<Companion> companions;
+
   Trip({
     required this.id,
     required this.title,
@@ -55,6 +59,7 @@ class Trip extends HiveObject {
     required this.days,
     this.imageUrl,
     required this.packingList,
+    required this.companions,
   });
 
   Trip copyWith({
@@ -68,6 +73,7 @@ class Trip extends HiveObject {
     HiveList<Day>? days,
     String? imageUrl,
     HiveList<PackingItem>? packingList,
+    HiveList<Companion>? companions,
   }) {
     return Trip(
       id: id,
@@ -82,6 +88,7 @@ class Trip extends HiveObject {
       days: days ?? this.days,
       imageUrl: imageUrl ?? this.imageUrl,
       packingList: packingList ?? this.packingList,
+      companions: companions ?? this.companions,
     );
   }
 
@@ -99,15 +106,25 @@ class Trip extends HiveObject {
       'days': days.map((day) => day.toJson()).toList(),
       'imageUrl': imageUrl,
       'packingList': packingList.map((item) => item.toJson()).toList(),
+      'companions': companions.map((comp) => comp.toJson()).toList(),
     };
   }
 
   factory Trip.fromJson(Map<String, dynamic> json, Box<Day> dayBox) {
     final packingListBox = Hive.box<PackingItem>('packing_items');
     final packingList = (json['packingList'] as List? ?? [])
-        .map((itemJson) => PackingItem.fromJson(itemJson as Map<String, dynamic>))
+        .map((itemJson) =>
+            PackingItem.fromJson(itemJson as Map<String, dynamic>))
         .toList();
-    final packingListHiveList = HiveList<PackingItem>(packingListBox)..addAll(packingList);
+    final packingListHiveList = HiveList<PackingItem>(packingListBox)
+      ..addAll(packingList);
+
+    final companionBox = Hive.box<Companion>('companions');
+    final companions = (json['companions'] as List? ?? [])
+        .map((compJson) => Companion.fromJson(compJson as Map<String, dynamic>))
+        .toList();
+    final companionHiveList = HiveList<Companion>(companionBox)
+      ..addAll(companions);
 
     final days = (json['days'] as List)
         .map((dayJson) => Day.fromJson(dayJson as Map<String, dynamic>))
@@ -127,6 +144,7 @@ class Trip extends HiveObject {
       days: dayHiveList,
       imageUrl: json['imageUrl'] as String?,
       packingList: packingListHiveList,
+      companions: companionHiveList,
     );
   }
 }
